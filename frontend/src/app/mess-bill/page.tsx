@@ -1,43 +1,40 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { HiOutlineDocumentDownload, HiOutlineExternalLink, HiOutlineTrash } from "react-icons/hi";
 import { useCurrentUser } from "@/context/AuthContext";
 import { monthNames } from "@/constants/months";
 import { useForm } from "@/utils/useForm";
+import { useMessBills, useCreateMessBill, useDeleteMessBill } from "@/hooks/useApi";
+import type { Bill } from '@/types';
 import Spinner from "@/components/Spinner";
+import { FormButton, IconButton } from '@/components/ui';
 
 // Helper for months
 const currentYear = new Date().getFullYear();
 const years = [currentYear, currentYear - 1, currentYear - 2];
 
-interface Bill {
-  _id: string;
-  month: string;
-  year: number;
-  previewUrl: string;
-  url: string;
-  [key: string]: unknown;
-}
+
 
 export default function MessBillPage() {
-  const [loading, setLoading] = useState(true);
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [error, setError] = useState<string>("");
   const [deletingBill, setDeletingBill] = useState<string | null>(null);
   const user = useCurrentUser();
   const [genericFormError, setGenericFormError] = useState("");
+  
+  // Use React Query hooks
+  const { data: bills = [], isLoading: loading, error } = useMessBills();
+  const createBillMutation = useCreateMessBill();
+  const deleteBillMutation = useDeleteMessBill();
 
   // useForm for admin bill form
   const {
     values,
-    errors,
+    setValues,
     touched,
+    errors,
     submitting,
     handleChange,
     handleBlur,
     handleSubmit,
-    setErrors,
-    setValues,
   } = useForm({
     initialValues: {
       month: monthNames[new Date().getMonth()],
@@ -52,24 +49,9 @@ export default function MessBillPage() {
       return errs;
     },
     onSubmit: async (vals) => {
-      setErrors({});
       setGenericFormError("");
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/mess-bill`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(vals),
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.message || "Failed to add bill");
-        }
-        const data = await res.json();
-        setBills([data.bill, ...bills]);
+        await createBillMutation.mutateAsync(vals);
         setValues({ month: monthNames[new Date().getMonth()], year: currentYear, previewUrl: "", url: "" });
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -89,57 +71,29 @@ export default function MessBillPage() {
     
     setDeletingBill(billId);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/mess-bill/${billId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to delete bill");
-      }
-      
-      // Remove the bill from the local state
-      setBills(bills.filter(bill => bill._id !== billId));
+      await deleteBillMutation.mutateAsync(billId);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Failed to delete bill");
-      } else {
-        setError("Failed to delete bill");
-      }
+      console.error('Failed to delete bill:', err);
     } finally {
       setDeletingBill(null);
     }
   };
 
-  // Fetch bills from backend
-  useEffect(() => {
-    const fetchBills = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/mess-bill`);
-        if (!res.ok) throw new Error("Failed to fetch mess bills");
-        const data = await res.json();
-        setBills(data.bills || []);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message || "Failed to load mess bills");
-        } else {
-          setError("Failed to load mess bills");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBills();
-  }, []);
+  // Bills are now fetched automatically by React Query
 
   if (loading) {
     return <Spinner className="min-h-screen" />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
+          <p className="text-gray-600">{error.message}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -197,7 +151,7 @@ export default function MessBillPage() {
               {errors.url && touched.url && <div id="bill-url-error" className="text-red-500 text-xs mt-1">{errors.url}</div>}
             </div>
             {genericFormError && <div className="text-red-600 text-sm">{genericFormError}</div>}
-            <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mt-2 flex items-center justify-center gap-2" disabled={submitting}>{submitting ? (<span className="flex items-center justify-center"><svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Adding...</span>) : "Add Bill"}</button>
+            <FormButton type="submit" className="w-full mt-2" loading={submitting}>Add Bill</FormButton>
           </form>
         )}
         {error ? (
@@ -206,7 +160,7 @@ export default function MessBillPage() {
           <div className="text-center text-gray-500 py-12">No mess bills available yet.</div>
         ) : (
           <ul className="flex flex-col gap-4">
-            {bills.map((bill) => (
+            {bills.map((bill: Bill) => (
               <li key={bill._id} className="flex flex-col sm:flex-row items-center justify-between bg-indigo-50 rounded-xl p-4 shadow-sm border border-indigo-100">
                 <div className="flex-1 text-center sm:text-left">
                   <span className="text-base sm:text-lg font-medium text-indigo-800">{bill.month} {bill.year}</span>
@@ -230,21 +184,15 @@ export default function MessBillPage() {
                     <HiOutlineDocumentDownload className="text-lg" /> Download
                   </a>
                   {user?.role === "admin" && (
-                    <button
+                    <IconButton
                       onClick={() => handleDeleteBill(bill._id)}
                       disabled={deletingBill === bill._id}
-                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg"
                       title="Delete bill"
+                      loading={deletingBill === bill._id}
                     >
-                      {deletingBill === bill._id ? (
-                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                        </svg>
-                      ) : (
-                        <HiOutlineTrash className="text-lg" />
-                      )}
-                    </button>
+                      <HiOutlineTrash className="text-lg" />
+                    </IconButton>
                   )}
                 </div>
               </li>

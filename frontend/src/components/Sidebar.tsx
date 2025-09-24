@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
+import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
@@ -23,21 +23,14 @@ type SidebarProps = {
 export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isLoggedIn, setIsLoggedIn, loading, updateUserFromToken } = useAuth();
+  const { isLoggedIn, loading, logout } = useAuth();
 
-  useEffect(() => {
-    // This effect can be used for other side-effects if needed,
-    // but the mounted state is no longer required for visibility control.
-  }, []);
+  // Removed empty useEffect
 
   if (loading) return null; // Simplified loading state check
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    updateUserFromToken(); // Immediately update user state
-    // Dispatch custom event to notify AuthContext of state change
-    window.dispatchEvent(new Event("authStateChanged"));
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
   };
 
@@ -56,7 +49,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
             if (link.hideWhenLoggedIn && isLoggedIn) return null;
             if (link.showWhenLoggedIn && !isLoggedIn) return null;
             return (
-              <React.Fragment key={link.href}>
+              <Fragment key={link.href}>
               <Link
                 href={link.href}
                   className={`rounded-lg px-4 py-3 font-medium text-base transition-colors text-gray-700 hover:bg-indigo-100 hover:text-indigo-900 focus:bg-indigo-200 focus:text-indigo-900 active:bg-indigo-200 active:text-indigo-900 flex items-center ${pathname === link.href ? "bg-indigo-50 text-indigo-700 font-semibold border-l-4 border-indigo-400" : ""}`}
@@ -66,7 +59,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               </Link>
                 {/* Divider after each link except last */}
                 {idx < navLinks.length - 1 && <div className="h-px bg-gray-100 my-1 mx-2" />}
-              </React.Fragment>
+              </Fragment>
             );
           })}
         </div>

@@ -1,27 +1,22 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useCurrentUser } from "@/context/AuthContext";
 import { HiOutlineDocumentDownload, HiOutlineExternalLink, HiOutlineTrash } from "react-icons/hi";
 import { useForm } from "@/utils/useForm";
+import { useNotifications, useCreateNotification, useDeleteNotification } from "@/hooks/useApi";
 import Spinner from "@/components/Spinner";
-
-interface Notification {
-  _id: string;
-  title: string;
-  message?: string;
-  pdfUrl: string;
-  type?: string;
-  createdAt: string;
-  [key: string]: unknown;
-}
+import { FormButton, IconButton } from '@/components/ui'
+import type { NotificationItem } from '@/types';
 
 export default function NotificationsPage() {
   const user = useCurrentUser();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [deletingNotification, setDeletingNotification] = useState<string | null>(null);
   const [genericFormError, setGenericFormError] = useState("");
+  
+  // Use React Query hooks
+  const { data: notifications = [], isLoading: loading, error } = useNotifications();
+  const createNotificationMutation = useCreateNotification();
+  const deleteNotificationMutation = useDeleteNotification();
 
   // useForm for admin notification form
   const {
@@ -32,7 +27,6 @@ export default function NotificationsPage() {
     handleChange,
     handleBlur,
     handleSubmit,
-    setErrors,
     setValues,
   } = useForm({
     initialValues: { title: "", message: "", pdfUrl: "", type: "" },
@@ -43,24 +37,9 @@ export default function NotificationsPage() {
       return errs;
     },
     onSubmit: async (vals) => {
-      setErrors({});
       setGenericFormError("");
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/notifications`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(vals),
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.message || "Failed to add notification");
-        }
-        const data = await res.json();
-        setNotifications([data.notification, ...notifications]);
+        await createNotificationMutation.mutateAsync(vals);
         setValues({ title: "", message: "", pdfUrl: "", type: "" });
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -80,57 +59,29 @@ export default function NotificationsPage() {
     
     setDeletingNotification(notificationId);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/notifications/${notificationId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to delete notification");
-      }
-      
-      // Remove the notification from the local state
-      setNotifications(notifications.filter(notification => notification._id !== notificationId));
+      await deleteNotificationMutation.mutateAsync(notificationId);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Failed to delete notification");
-      } else {
-        setError("Failed to delete notification");
-      }
+      console.error('Failed to delete notification:', err);
     } finally {
       setDeletingNotification(null);
     }
   };
 
-  // Fetch notifications
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/notifications`);
-        if (!res.ok) throw new Error("Failed to fetch notifications");
-        const data = await res.json();
-        setNotifications(data.notifications || []);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message || "Failed to load notifications");
-        } else {
-          setError("Failed to load notifications");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchNotifications();
-  }, []);
+  // Notifications are now fetched automatically by React Query
 
   if (loading) {
     return <Spinner className="min-h-screen" />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
+          <p className="text-gray-600">{error.message}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -197,7 +148,7 @@ export default function NotificationsPage() {
               />
             </div>
             {genericFormError && <div className="text-red-600 text-sm">{genericFormError}</div>}
-            <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mt-2 flex items-center justify-center gap-2" disabled={submitting}>{submitting ? (<span className="flex items-center justify-center"><svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Adding...</span>) : "Add Notification"}</button>
+            <FormButton type="submit" className="w-full mt-2" loading={submitting}>Add Notification</FormButton>
           </form>
         )}
         {error ? (
@@ -206,7 +157,7 @@ export default function NotificationsPage() {
           <div className="text-center text-gray-500 py-12">No notifications yet.</div>
         ) : (
           <ul className="flex flex-col gap-4">
-            {notifications.map((n) => (
+            {notifications.map((n: NotificationItem) => (
               <li key={n._id} className="flex flex-col sm:flex-row items-center justify-between bg-indigo-50 rounded-xl p-4 shadow-sm border border-indigo-100">
                 <div className="flex-1 text-center sm:text-left">
                   <span className="text-base sm:text-lg font-medium text-indigo-800">{n.title}</span>
@@ -233,21 +184,15 @@ export default function NotificationsPage() {
                     <HiOutlineDocumentDownload className="text-lg" /> Download
                   </a>
                   {user?.role === "admin" && (
-                    <button
+                    <IconButton
                       onClick={() => handleDeleteNotification(n._id)}
                       disabled={deletingNotification === n._id}
-                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg"
                       title="Delete notification"
+                      loading={deletingNotification === n._id}
                     >
-                      {deletingNotification === n._id ? (
-                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                        </svg>
-                      ) : (
-                        <HiOutlineTrash className="text-lg" />
-                      )}
-                    </button>
+                      <HiOutlineTrash className="text-lg" />
+                    </IconButton>
                   )}
                 </div>
               </li>

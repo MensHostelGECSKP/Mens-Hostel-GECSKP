@@ -1,12 +1,14 @@
 "use client";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { validateEmail, validatePassword } from "@/utils/validation";
 import { useForm } from "@/utils/useForm";
+import { api } from "@/utils/api";
 import Image from 'next/image';
+import Spinner from '@/components/Spinner';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,20 +41,21 @@ export default function LoginPage() {
     onSubmit: async (vals) => {
       setErrors({});
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(vals),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      localStorage.setItem("token", data.token);
-      setIsLoggedIn(true);
-      updateUserFromToken();
-      // Dispatch custom event to notify AuthContext of state change
-      window.dispatchEvent(new Event("authStateChanged"));
-      router.replace("/dashboard"); // Use replace instead of push to prevent back button issues
-      toast.success("Login successful!");
+      const response = await api.post('/api/auth/login', vals);
+      if (response.error) throw new Error(response.error);
+      
+      const token = (response.data as { token?: string } | undefined)?.token;
+      if (token) {
+        localStorage.setItem("token", token);
+        setIsLoggedIn(true);
+        updateUserFromToken();
+        // Dispatch custom event to notify AuthContext of state change
+        window.dispatchEvent(new Event("authStateChanged"));
+        router.replace("/dashboard"); // Use replace instead of push to prevent back button issues
+        toast.success("Login successful!");
+      } else {
+        throw new Error("Login failed");
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "An error occurred");
     }
@@ -123,12 +126,7 @@ export default function LoginPage() {
               className="w-full bg-indigo-600 text-white py-2.5 rounded-xl hover:bg-indigo-700 transition-all shadow-lg font-semibold text-base tracking-wide disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               disabled={submitting}
             >
-              {submitting ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                  Logging in...
-                </>
-              ) : "Login"}
+              {submitting ? (<><Spinner className="h-5 w-5 mr-2 text-white" />Logging in...</>) : "Login"}
             </button>
           </form>
         </div>
