@@ -4,6 +4,11 @@ import '@testing-library/jest-dom';
 import AttendanceCalendar from './AttendanceCalendar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+const mockUseAuth = jest.fn();
+jest.mock('@/context/AuthContext', () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
 // Mocking fetch API
 // Mock `fetch` to return a Response-like object expected by the ApiClient
 global.fetch = jest.fn(() =>
@@ -42,6 +47,12 @@ describe('AttendanceCalendar', () => {
     // Clear mocks and localStorage before each test
     (fetch as jest.Mock).mockClear();
     localStorage.clear();
+    mockUseAuth.mockReset();
+    mockUseAuth.mockReturnValue({
+      isLoggedIn: true,
+      loading: false,
+      user: { userId: 'test-user-id', name: 'Test User', role: 'student' },
+    });
     // Set a fake token for a logged-in user
     const fakeToken = "header." + btoa(JSON.stringify({ userId: 'test-user-id' })) + ".signature";
     localStorage.setItem('token', fakeToken);
@@ -66,6 +77,11 @@ describe('AttendanceCalendar', () => {
 
   it('renders nothing when not logged in', async () => {
     localStorage.clear(); // Ensure no user is logged in
+    mockUseAuth.mockReturnValue({
+      isLoggedIn: false,
+      loading: false,
+      user: null,
+    });
     
     const qc = new QueryClient();
     const { container } = render(
@@ -77,4 +93,4 @@ describe('AttendanceCalendar', () => {
     // The component should render null, so the container should be empty
     expect(container.firstChild).toBeNull();
   });
-}); 
+});

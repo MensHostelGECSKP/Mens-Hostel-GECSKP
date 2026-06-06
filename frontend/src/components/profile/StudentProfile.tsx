@@ -1,12 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import type { User } from "@/types";
-import { HiBuildingOffice2, HiEnvelope, HiUser, HiAcademicCap } from "react-icons/hi2";
+import { HiBuildingOffice2, HiEnvelope, HiUser, HiAcademicCap, HiArrowRightOnRectangle } from "react-icons/hi2";
 import ProfileInfoRow from "./ProfileInfoRow";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function StudentProfile({ user }: { user: User }) {
+  const router = useRouter();
+  const { logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
   const initial = user.name?.charAt(0).toUpperCase() ?? "?";
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.push("/login");
+    } finally {
+      setLoggingOut(false);
+      setShowLogoutConfirm(false);
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-lg animate-in fade-in px-4 pb-6 pt-4 duration-300 md:max-w-xl md:px-6">
@@ -34,6 +52,56 @@ export default function StudentProfile({ user }: { user: User }) {
           value={user.yearOfStudy ? `Year ${user.yearOfStudy}` : ""}
         />
       </div>
+
+      <button
+        type="button"
+        onClick={() => setShowLogoutConfirm(true)}
+        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.99] hover:bg-red-50 disabled:opacity-60"
+      >
+        <HiArrowRightOnRectangle className="h-5 w-5" aria-hidden />
+        Log out
+      </button>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" role="presentation">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            onClick={() => !loggingOut && setShowLogoutConfirm(false)}
+            aria-hidden
+          />
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="logout-title"
+            className="relative z-10 w-full max-w-sm animate-in fade-in rounded-2xl bg-white p-5 shadow-[0_12px_48px_rgba(15,23,42,0.18)]"
+          >
+            <h2 id="logout-title" className="text-lg font-bold text-gray-900">
+              Confirm Logout
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Are you sure you want to log out of your account?
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                disabled={loggingOut}
+                className="min-h-[48px] flex-1 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="min-h-[48px] flex-1 rounded-xl bg-red-600 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {loggingOut ? "Logging out..." : "Logout"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <p className="mt-8 text-center text-xs text-gray-400">
         Password change coming soon. Contact the office for account updates.

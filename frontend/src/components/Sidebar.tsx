@@ -4,15 +4,27 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, Dispatch, SetStateAction } from "react";
 import { useAuth } from "../context/AuthContext";
+import {
+  HiHome,
+  HiBell,
+  HiUser,
+  HiClipboardDocumentList,
+  HiArrowRightOnRectangle,
+  HiDocumentText,
+  HiUserPlus,
+  HiUsers,
+  HiCog6Tooth,
+  HiArrowLeftOnRectangle,
+} from "react-icons/hi2";
+import { MdRestaurant } from "react-icons/md";
 
 const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/login", label: "Mess Login", hideWhenLoggedIn: true },
-  { href: "/dashboard", label: "Dashboard", showWhenLoggedIn: true },
-  { href: "/mess-bill", label: "Mess Bill" },
-  { href: "/rules", label: "Rules" },
-  { href: "/notifications", label: "Notifications" },
-  
+  { href: "/", label: "Home", icon: HiHome },
+  { href: "/login", label: "Mess Login", hideWhenLoggedIn: true, icon: HiArrowLeftOnRectangle },
+  { href: "/dashboard", label: "Dashboard", showWhenLoggedIn: true, icon: MdRestaurant },
+  { href: "/mess-bill", label: "Mess Bill", icon: HiDocumentText },
+  { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
+  { href: "/notifications", label: "Notifications", icon: HiBell },
 ];
 
 type SidebarProps = {
@@ -25,22 +37,24 @@ type SidebarProps = {
 };
 
 const studentDesktopLinks = [
-  { href: "/dashboard", label: "Home" },
-  { href: "/mess-bill", label: "Mess Bill" },
-  { href: "/notifications", label: "Notifications" },
-  { href: "/profile", label: "Profile" },
-  { href: "/rules", label: "Rules" },
+  { href: "/", label: "Home", icon: HiHome },
+  { href: "/dashboard", label: "Mess", icon: MdRestaurant },
+  { href: "/mess-bill", label: "Bills", icon: HiDocumentText },
+  { href: "/notifications", label: "Notifications", icon: HiBell },
+  { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
+  { href: "/profile", label: "Profile", icon: HiUser },
 ];
 
 const adminDesktopLinks = [
-  { href: "/dashboard", label: "Home" },
-  { href: "/dashboard/upload-mess-bill", label: "Upload Mess Bill" },
-  { href: "/notifications", label: "Notifications" },
-  { href: "/profile", label: "Profile" },
-  { href: "/dashboard/manage-users", label: "Manage Users" },
-  { href: "/dashboard/create-user", label: "Create User" },
-  { href: "/dashboard/monthly-report", label: "Monthly Report" },
-  { href: "/dashboard/settings", label: "Settings" },
+  { href: "/", label: "Public Home", icon: HiHome },
+  { href: "/dashboard", label: "Dashboard", icon: MdRestaurant },
+  { href: "/dashboard/upload-mess-bill", label: "Upload Mess Bill", icon: HiDocumentText },
+  { href: "/notifications", label: "Notifications", icon: HiBell },
+  { href: "/profile", label: "Profile", icon: HiUser },
+  { href: "/dashboard/manage-users", label: "Manage Users", icon: HiUsers },
+  { href: "/dashboard/create-user", label: "Create User", icon: HiUserPlus },
+  { href: "/dashboard/monthly-report", label: "Monthly Report", icon: HiDocumentText },
+  { href: "/dashboard/settings", label: "Settings", icon: HiCog6Tooth },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = false, adminMode = false }: SidebarProps) {
@@ -82,16 +96,23 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = fal
               if (navLink.hideWhenLoggedIn && isLoggedIn) return null;
               if (navLink.showWhenLoggedIn && !isLoggedIn) return null;
             }
-            const active = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
+            const active =
+              link.href === "/"
+                ? pathname === "/"
+                : link.href === "/dashboard"
+                ? pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+                : pathname.startsWith(link.href);
+            const Icon = link.icon;
             return (
               <React.Fragment key={link.href}>
-              <Link
-                href={link.href}
-                  className={`rounded-lg px-4 py-3 font-medium text-base transition-colors text-gray-700 hover:bg-[var(--mh-primary-soft)] hover:text-[var(--mh-primary)] flex items-center ${active ? "bg-[var(--mh-primary-soft)] text-[var(--mh-primary)] font-semibold border-l-4 border-[var(--mh-primary)]" : ""}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                {link.label}
-              </Link>
+                <Link
+                  href={link.href}
+                  className={`rounded-lg px-4 py-3 font-medium text-base transition-colors text-gray-700 hover:bg-[var(--mh-primary-soft)] hover:text-[var(--mh-primary)] flex items-center gap-3 ${active ? "bg-[var(--mh-primary-soft)] text-[var(--mh-primary)] font-semibold border-l-4 border-[var(--mh-primary)]" : ""}`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <Icon className={`h-5 w-5 ${active ? "text-[var(--mh-primary)]" : "text-gray-400"}`} />
+                  <span>{link.label}</span>
+                </Link>
                 {idx < arr.length - 1 && <div className="h-px bg-gray-100 my-1 mx-2" />}
               </React.Fragment>
             );
@@ -101,10 +122,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = fal
           {isLoggedIn && (
             <button
               onClick={handleLogout}
-              className="w-11/12 rounded-lg px-4 py-2 font-medium text-red-600 hover:bg-red-100 hover:text-red-700 focus:bg-red-200 focus:text-red-800 transition-colors text-left mb-3 shadow-sm border border-red-200 text-base"
+              className="w-11/12 rounded-lg px-4 py-2 font-medium text-red-600 hover:bg-red-100 hover:text-red-700 focus:bg-red-200 focus:text-red-800 transition-colors text-left mb-3 shadow-sm border border-red-200 text-base flex items-center gap-3"
               style={{ outline: "none" }}
             >
-              Logout
+              <HiArrowRightOnRectangle className="h-5 w-5 text-red-500" aria-hidden />
+              <span>Logout</span>
             </button>
           )}
           <div className="w-full text-xs leading-tight text-center px-2 select-none pt-1 text-gray-500">
@@ -117,4 +139,4 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = fal
       </aside>
     </>
   );
-} 
+}

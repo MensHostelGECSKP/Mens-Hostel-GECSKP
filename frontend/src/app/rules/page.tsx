@@ -1,70 +1,213 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  HiBuildingOffice2,
+  HiShieldCheck,
+  HiChevronLeft,
+  HiClipboardDocumentList,
+} from "react-icons/hi2";
+import { MdRestaurant } from "react-icons/md";
+import { motion } from "framer-motion";
 
 export default function RulesPage() {
-  const rules = [
-    "Allotment of rooms is the discretion of the warden. Inmates should stay only in rooms allotted for them. Relocating to other rooms without permission will be treated as a serious violation.",
-    "Each student will be responsible for the furniture available in the rooms",
-    "Inmates should bring their own beddings, buckets, mug, plate, glass and cutleries (if required).",
-    "Rooms are provided with power supply. Electrical installation provided in the rooms should not be tampered with. Any infringement will be dealt with stern action and loss will be recovered from the concerned.",
-    "Students should see that the light and fans are switched off while they are leaving the rooms. Reducing electricity and water consumption is a collective responsibility.",
-    "Students are not permitted to have other electrical equipment such as heater, kettle and iron box inside their rooms. If such electrical equipment is found to be in someone&apos;s possession, fine will be levied immediately.",
-    "Inmates are not allowed to bring guests into the hostel without permission of the warden.",
-    "If you want to vacate from hostel, written request should be submitted to the warden. If you just leave without any intimation, you will be treated as an inmate and expenses will be billed against your name as usual.",
-    // Add all rules here
-    
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"all" | "allotment" | "catering" | "discipline">("all");
+
+  const roomRules = [
+    "Allotment of rooms is at the discretion of the Warden. Inmates must stay only in their allotted rooms. Relocating without prior permission is a serious violation.",
+    "Each student is personally responsible for the furniture and fixtures available in their room.",
+    "Inmates must bring their own bedding, buckets, mug, plate, glass, and cutlery.",
+    "Electrical installations in rooms must not be tampered with. Any damage will result in disciplinary action and recovery of losses.",
+    "Lights and fans must be switched off when leaving the room. Conserving energy and water is a collective responsibility.",
+    "Use of heavy electrical appliances (heaters, kettles, iron boxes) is strictly prohibited. Unauthorized items will be confiscated and fined.",
+    "Inmates are not permitted to host guests inside the hostel rooms without written permission from the Warden.",
+    "To vacate the hostel, a written request must be submitted to the Warden. Unannounced departures will continue to incur regular billing.",
   ];
 
+  const cateringRules = [
+    "All inmates are automatically members of the hostel mess and must register. Staying in the hostel without availing mess facilities is not permitted.",
+    "Both vegetarian and non-vegetarian meals are provided in the mess hall.",
+    "Inmates must not bring outsiders into the mess hall under any circumstances. Violation will lead to immediate hostel expulsion.",
+    "A Mess Committee is formed annually, and members are collectively responsible for the proper functioning and supervision of the mess.",
+    "Meals must be consumed in the dining hall. Inmates are not permitted to carry food items, plates, or utensils to their rooms.",
+    "Residents must be mindful of food waste and take only what they intend to consume.",
+    "The minimum mess cut period is 2 days. Cuts must be recorded in the register at the hostel office at least 2 days in advance.",
+    "Boarder attendance lists and monthly mess bills are published at the end of each month. Discrepancies should be reported promptly.",
+  ];
+
+  const disciplineRules = [
+    "A security guard is on duty overnight. All entries and exits during night hours are strictly under their supervision.",
+    "Residents must keep their rooms and surroundings clean. Disposal of waste in corridors or public areas is prohibited.",
+    "Decorum and silence must be maintained. Loud music, movies, or shouting that disturbs other residents is strictly prohibited.",
+    "Residents must return to the hostel by 9:30 PM. Late comers must sign the register kept with security/matron.",
+    "Convening meetings, parties, or gatherings in the hostel premises without prior written approval from the Warden is forbidden.",
+    "Residents must behave politely and respectfully with all hostel staff, cooks, and security personnel.",
+    "Teasing, ragging, or harassing fellow students is a severe offence leading to immediate expulsion and police action.",
+    "Possession or consumption of tobacco, alcohol, and narcotic drugs is strictly prohibited. Offenders will be summarily expelled.",
+    "Possession of weapons or dangerous items of any kind is strictly forbidden.",
+    "Playing football or active sports inside the hostel building is not allowed.",
+    "The terrace access door will be locked at 9:30 PM daily.",
+    "Playing sports on the terrace is prohibited at any time of day due to safety hazards.",
+    "Failure to comply with these guidelines will render the resident liable to suspension, fine, or immediate expulsion.",
+  ];
+
+  const categories = [
+    { id: "all", label: "All Rules", icon: HiClipboardDocumentList },
+    { id: "allotment", label: "Room Allotment", icon: HiBuildingOffice2 },
+    { id: "catering", label: "Mess & Catering", icon: MdRestaurant },
+    { id: "discipline", label: "General Discipline", icon: HiShieldCheck },
+  ] as const;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 flex flex-col items-center p-0 sm:p-8">
-      <header className="sticky top-0 z-10 w-full bg-white/90 border-b border-gray-200 py-4 mb-8 shadow-sm">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center text-indigo-800 tracking-tight">Hostel Rules & Regulations</h1>
+    <div className="min-h-screen bg-[var(--mh-surface)] font-sans antialiased text-gray-900 pb-16">
+      {/* Header Panel */}
+      <header className="bg-white border-b border-gray-100 py-5 px-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+        <div className="mx-auto w-full max-w-lg md:max-w-3xl lg:max-w-4xl flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 transition active:scale-95 border border-gray-100"
+            aria-label="Go back"
+          >
+            <HiChevronLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 md:text-2xl">
+              Rules & Guidelines
+            </h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Hostel rules and responsibilities for all residents.
+            </p>
+          </div>
+        </div>
       </header>
-      <main className="w-full max-w-3xl bg-white/95 rounded-2xl shadow-lg p-6 sm:p-10 border border-gray-100">
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-indigo-700 mb-2">Allotment of rooms</h2>
-          <ul className="list-disc pl-6 space-y-2 text-gray-800">
-            {rules.map((rule, index) => (
-              <li key={index} className="mb-2">{rule}</li>
-            ))}
-          </ul>
+
+      {/* Main Categories and Rules Lists */}
+      <main className="mx-auto w-full max-w-lg px-4 pt-6 md:max-w-3xl md:px-6 lg:max-w-4xl">
+        {/* Category Pills Selector */}
+        <section className="mb-6 flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-gray-200">
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            const active = activeTab === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveTab(cat.id)}
+                className={`flex items-center gap-2 shrink-0 rounded-2xl px-4 py-2.5 text-xs font-semibold shadow-sm transition active:scale-95 ${
+                  active
+                    ? "bg-[var(--mh-primary)] text-white"
+                    : "bg-white text-gray-600 border border-gray-100 hover:bg-gray-50"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
         </section>
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-indigo-700 mb-2">Catering</h2>
-          <ul className="list-disc pl-6 space-y-2 text-gray-800">
-            <li>All inmates are automatically members of Hostel mess and they have to register their names in the mess. No request to stay in hostel without availing mess facility will be entertained.</li>
-            <li>Vegetarian and non-vegetarian foods will be available in the mess.</li>
-            <li>Under no circumstances, inmates should bring outsiders into the mess hall. Such misconduct will result in expulsion from the hostel. If hostel staff tries to ascertain your identity in the mess hall, inmates have to comply with it.</li>
-            <li>Hostel mess committee will be formed each year and the mess committee members will be responsible for the proper functioning of the mess for the month.</li>
-            <li>Students have to take food in the mess hall and they are not permitted to carry food items, plates or spoons from the mess hall to rooms for their personal use.</li>
-            <li>Be mindful about wastage of food you take in your platter.</li>
-            <li>Minimum allowable mess reduction period at a time will be two days. Those who wish to avail mess cut should note it down in the mess register maintained in the hostel office at least 2 days before the start of mess reduction period.</li>
-            <li>At the end of every month the list of boarder&apos;s attendance and the monthly bill will be published. Any discrepancy can be pointed out for correction.</li>
-          </ul>
-        </section>
-        <section className="mb-4">
-          <h2 className="text-xl font-semibold text-indigo-700 mb-2">General discipline</h2>
-          <ul className="list-disc pl-6 space-y-2 text-gray-800">
-            <li>At night, a security staff will be on duty. In/out movement from/to hostel will be strictly under his supervision.</li>
-            <li>Inmates should keep their rooms scrupulously clean. Discarded rags and papers should not be thrown about in the room, terrace and premises. The doors, rooms, walls etc. should not be disfigured by writing, sticking hand bills, posters etc.</li>
-            <li>They should behave with restraint and decorum. Shouting, reading aloud, playing music/movies aloud and any acts likely to disturb other inmates should be avoided.</li>
-            <li>All members are expected to be in the hostel before 9.30 p.m. Late comers will be admitted only after signing in the late register kept with the matron at LH and security staff at MH.</li>
-            <li>Members are not permitted to convene meetings of any sort anywhere in the hostel or its premises without warden&apos;s written sanction obtained on a written requisition. Any gathering, political/religious or of any other nature, which would hamper the peace, harmony and coexistence of inmates will result in serious actions against the perpetrators.</li>
-            <li>Inmates should not invite outsiders to the hostel for any purpose.</li>
-            <li>While playing TV in the TV room, demand of the majority should be generally considered while choosing programmes/channels.</li>
-            <li>Inmates should comply orders and cooperate with the hostel management, in case any water shortage/disruption in water supply occur.</li>
-            <li>Students residing in the hostel should not tease or rag their fellow students, juniors or anybody. If they violate this rule, they shall be summarily dismissed from the hostel and strict legal actions will be taken against them.</li>
-            <li>Consumption of tobacco and alcohol is strictly prohibited and offenders will be expelled immediately. If anyone found using/supplying/abetting the supply of drugs or narcotic substances will be handed over to the police and criminal proceedings will be initiated.</li>
-            <li>Students are strictly forbidden from possessing weapons of any sort.</li>
-            <li>Inmates should behave politely with hostel staff. Rude behaviour, if reported, will result in demerit points, which will be held against the offenders in future admissions to hostels. Indecent behaviour and indiscipline will result in immediate expulsion from the hostel and blacklisting from future admission to the MH/LH.</li>
-            <li>Playing football inside MH building is not allowed.</li>
-            <li>Door to terrace will be locked at 9.30 PM. No requests to use terrace after that will be accepted.</li>
-            <li>Playing football on the MH terrace at any time of the day is not allowed and disciplinary action will be taken against the violators.</li>
-            <li>Breach, either wilful or by ignorance, of any of the above rules of the hostel will render the offender liable to suspension or dismissal and the matter will be reported to the principal and guardian.</li>
-          </ul>
-        </section>
+
+        {/* Rules Container */}
+        <div className="flex flex-col gap-6">
+          {/* Room Allotment Section */}
+          {(activeTab === "all" || activeTab === "allotment") && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              aria-label="Room Allotment Rules"
+            >
+              <div className="mb-3 flex items-center gap-2 px-1">
+                <HiBuildingOffice2 className="h-5 w-5 text-[var(--mh-primary)]" />
+                <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                  Room Allotment & Care
+                </h2>
+              </div>
+              <div className="grid gap-2">
+                {roomRules.map((rule, idx) => (
+                  <div
+                    key={idx}
+                    className="flex gap-4 rounded-2xl bg-white p-4 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--mh-primary-soft)] text-[11px] font-bold text-[var(--mh-primary)]">
+                      {idx + 1}
+                    </span>
+                    <p className="text-[13px] text-gray-700 leading-relaxed font-medium">
+                      {rule}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* Mess & Catering Section */}
+          {(activeTab === "all" || activeTab === "catering") && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              aria-label="Mess and Catering Rules"
+            >
+              <div className="mb-3 flex items-center gap-2 px-1">
+                <MdRestaurant className="h-5 w-5 text-amber-500" />
+                <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                  Mess & Catering Guidelines
+                </h2>
+              </div>
+              <div className="grid gap-2">
+                {cateringRules.map((rule, idx) => (
+                  <div
+                    key={idx}
+                    className="flex gap-4 rounded-2xl bg-white p-4 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-50 text-[11px] font-bold text-amber-600">
+                      {idx + 1}
+                    </span>
+                    <p className="text-[13px] text-gray-700 leading-relaxed font-medium">
+                      {rule}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* General Discipline Section */}
+          {(activeTab === "all" || activeTab === "discipline") && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              aria-label="General Discipline Rules"
+            >
+              <div className="mb-3 flex items-center gap-2 px-1">
+                <HiShieldCheck className="h-5 w-5 text-emerald-500" />
+                <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                  General Discipline & Conduct
+                </h2>
+              </div>
+              <div className="grid gap-2">
+                {disciplineRules.map((rule, idx) => (
+                  <div
+                    key={idx}
+                    className="flex gap-4 rounded-2xl bg-white p-4 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[11px] font-bold text-emerald-600">
+                      {idx + 1}
+                    </span>
+                    <p className="text-[13px] text-gray-700 leading-relaxed font-medium">
+                      {rule}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+        </div>
       </main>
     </div>
   );
-} 
+}

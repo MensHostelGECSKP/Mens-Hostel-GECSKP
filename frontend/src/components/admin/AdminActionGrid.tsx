@@ -61,6 +61,8 @@ export default function AdminActionGrid() {
   useEffect(() => {
     router.prefetch("/dashboard/manage-users");
     router.prefetch("/dashboard/monthly-report");
+    router.prefetch("/notifications");
+    router.prefetch("/dashboard/upload-mess-bill");
   }, [router]);
 
   const handleAction = (action: ActionItem) => {
@@ -79,12 +81,12 @@ export default function AdminActionGrid() {
               key={action.key}
               type="button"
               onClick={() => handleAction(action)}
-              disabled={isLoading}
+              disabled={loadingKey !== null}
               className="group relative flex min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition hover:shadow-[0_4px_16px_rgba(0,0,0,0.07)] active:scale-[0.98] disabled:opacity-90 md:min-h-[108px]"
               aria-label={action.label}
               aria-busy={isLoading}
             >
-              {isLoading && (action.key === "manageUser" || action.key === "monthlyReport") ? (
+              {isLoading ? (
                 <>
                   <Skeleton className="h-12 w-12 rounded-2xl" aria-hidden />
                   <Skeleton className="h-4 w-24 rounded-lg" aria-hidden />

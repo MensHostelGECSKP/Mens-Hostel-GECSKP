@@ -67,7 +67,7 @@ export default function AdminDrawer({ open, onClose }: AdminDrawerProps) {
             );
           })}
         </nav>
-        <div className="border-t border-gray-100 p-3">
+        <div className="border-t border-gray-100 p-3 flex flex-col gap-3">
           <button
             type="button"
             onClick={handleLogout}
@@ -75,6 +75,12 @@ export default function AdminDrawer({ open, onClose }: AdminDrawerProps) {
           >
             Logout
           </button>
+          <div className="w-full text-xs leading-tight text-center px-2 select-none pt-1 text-gray-500">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-600 via-indigo-600 to-pink-500 font-semibold">Made by </span>
+            <span className="text-black font-semibold">Sabari</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-600 via-indigo-600 to-pink-500 font-semibold"> &amp; </span>
+            <span className="text-black font-semibold">Roomies 2.0</span>
+          </div>
         </div>
       </aside>
     </>

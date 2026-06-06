@@ -4,16 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HiHome, HiBell, HiUser } from "react-icons/hi2";
 import { MdRestaurant } from "react-icons/md";
+import { getActiveBottomNavTab } from "@/utils/bottomNav";
 
 const tabs = [
-  { href: "/dashboard", label: "Home", icon: HiHome },
-  { href: "/mess-bill", label: "Mess", icon: MdRestaurant },
-  { href: "/notifications", label: "Notifications", icon: HiBell },
-  { href: "/profile", label: "Profile", icon: HiUser },
+  { href: "/dashboard", label: "Home", icon: HiHome, key: "home" },
+  { href: "/mess-bill", label: "Mess", icon: MdRestaurant, key: "mess" },
+  { href: "/notifications", label: "Notifications", icon: HiBell, key: "notifications" },
+  { href: "/profile", label: "Profile", icon: HiUser, key: "profile" },
 ] as const;
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const activeTab = getActiveBottomNavTab(pathname);
 
   return (
     <nav
@@ -21,11 +23,8 @@ export default function BottomNav() {
       aria-label="Main navigation"
     >
       <div className="mx-auto flex max-w-lg items-stretch justify-around gap-1 px-2 pt-1.5 pb-1">
-        {tabs.map(({ href, label, icon: Icon }) => {
-          const active =
-            href === "/dashboard"
-              ? pathname === "/dashboard" || pathname.startsWith("/dashboard/")
-              : pathname.startsWith(href);
+        {tabs.map(({ href, label, icon: Icon, key }) => {
+          const active = activeTab === key;
           return (
             <Link
               key={href}
