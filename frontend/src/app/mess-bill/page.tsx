@@ -9,6 +9,9 @@ import MessBillCard from "@/components/student/mess-bill/MessBillCard";
 import MessBillsSkeleton from "@/components/student/mess-bill/MessBillsSkeleton";
 import { useMessBills } from "@/hooks/useApi";
 
+import EmptyState from "@/components/student/EmptyState";
+import { HiDocumentText } from "react-icons/hi2";
+
 export default function MessBillPage() {
   const router = useRouter();
   const { user, isLoggedIn, loading: authLoading } = useAuth();
@@ -49,15 +52,17 @@ export default function MessBillPage() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="mt-3 text-sm font-semibold text-[var(--mh-primary)]"
+              className="mt-3 text-sm font-semibold text-[var(--mh-primary)] active-press"
             >
               Try again
             </button>
           </div>
         ) : sortedBills.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-            <p className="text-sm text-gray-500">No mess bills published yet.</p>
-          </div>
+          <EmptyState
+            icon={HiDocumentText}
+            title="No bills published yet"
+            description="Mess bills published by the administrator will appear here once they are uploaded."
+          />
         ) : (
           <ul className="flex flex-col gap-4">
             {sortedBills.map((bill) => (

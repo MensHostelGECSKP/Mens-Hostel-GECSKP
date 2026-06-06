@@ -102,7 +102,7 @@ export default function AdminProfile({ user }: { user: User }) {
             <li key={href}>
               <Link
                 href={href}
-                className="flex min-h-[56px] items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.99] hover:shadow-[0_4px_16px_rgba(0,0,0,0.07)]"
+                className="flex min-h-[56px] items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:shadow-[0_4px_16px_rgba(0,0,0,0.07)]"
               >
                 <span
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}
@@ -125,7 +125,7 @@ export default function AdminProfile({ user }: { user: User }) {
         type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.99] hover:bg-red-50 disabled:opacity-60"
+        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-red-50 disabled:opacity-60"
       >
         <HiArrowRightOnRectangle className="h-5 w-5" aria-hidden />
         {loggingOut ? "Signing out…" : "Log out"}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   HiBuildingOffice2,
@@ -10,10 +10,23 @@ import {
 } from "react-icons/hi2";
 import { MdRestaurant } from "react-icons/md";
 import { motion } from "framer-motion";
+import { RulesSkeleton } from "@/components/student/Skeleton";
 
 export default function RulesPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"all" | "allotment" | "catering" | "discipline">("all");
+  const [isMountLoading, setIsMountLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMountLoading(false);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isMountLoading) {
+    return <RulesSkeleton />;
+  }
 
   const roomRules = [
     "Allotment of rooms is at the discretion of the Warden. Inmates must stay only in their allotted rooms. Relocating without prior permission is a serious violation.",

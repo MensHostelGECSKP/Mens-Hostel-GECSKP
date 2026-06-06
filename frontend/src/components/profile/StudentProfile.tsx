@@ -56,7 +56,7 @@ export default function StudentProfile({ user }: { user: User }) {
       <button
         type="button"
         onClick={() => setShowLogoutConfirm(true)}
-        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.99] hover:bg-red-50 disabled:opacity-60"
+        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-red-50 disabled:opacity-60"
       >
         <HiArrowRightOnRectangle className="h-5 w-5" aria-hidden />
         Log out

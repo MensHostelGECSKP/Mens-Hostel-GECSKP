@@ -181,3 +181,41 @@ a {
     }
   }
 }
+
+@keyframes slide-up-subtle {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.page-transition {
+  animation: slide-up-subtle 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Touch feedback helper classes */
+.active-press {
+  transition: transform 0.1s ease-out;
+}
+.active-press:active {
+  transform: scale(0.96);
+}
+
+.active-press-sm {
+  transition: transform 0.1s ease-out;
+}
+.active-press-sm:active {
+  transform: scale(0.95);
+}
+
+.active-press-lg {
+  transition: transform 0.1s ease-out;
+}
+.active-press-lg:active {
+  transform: scale(0.98);
+}
+

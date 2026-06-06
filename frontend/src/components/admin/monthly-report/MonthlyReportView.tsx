@@ -10,6 +10,7 @@ import MonthlyReportCalendar, {
   toDateKey,
 } from "./MonthlyReportCalendar";
 import { MonthlyReportPageSkeleton } from "./MonthlyReportSkeleton";
+import toast from "react-hot-toast";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) =>
   new Date(0, i).toLocaleString("default", { month: "long" })
@@ -29,8 +30,6 @@ export default function MonthlyReportView() {
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [filterSheet, setFilterSheet] = useState<"month" | "year" | null>(null);
   const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const { data: users = [], isPending, isLoading } = useUsers(true);
   const showSkeleton = isPending || (isLoading && users.length === 0);
@@ -51,12 +50,6 @@ export default function MonthlyReportView() {
   useEffect(() => {
     setSelectedKeys(new Set(allDateKeys));
   }, [allDateKeys]);
-
-  useEffect(() => {
-    if (!showSuccess) return;
-    const timer = setTimeout(() => setShowSuccess(false), 2500);
-    return () => clearTimeout(timer);
-  }, [showSuccess]);
 
   const selectedCount = selectedKeys.size;
   const exportMonthLabel = new Date(selectedYear, selectedMonth).toLocaleString(
@@ -79,8 +72,6 @@ export default function MonthlyReportView() {
   const handleExport = async () => {
     if (selectedCount === 0 || generating) return;
     setGenerating(true);
-    setError(null);
-    setShowSuccess(false);
     try {
       const token = localStorage.getItem("token");
       const dateStrings = Array.from(selectedKeys).sort();
@@ -112,9 +103,10 @@ export default function MonthlyReportView() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      setShowSuccess(true);
-    } catch {
-      setError("Failed to download report. Please try again.");
+      toast.success("Report downloaded successfully");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to download report. Please try again.";
+      toast.error(msg);
     } finally {
       setGenerating(false);
     }
@@ -133,7 +125,7 @@ export default function MonthlyReportView() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] transition active:scale-[0.98]"
+          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] transition active-press active:scale-[0.96]"
         >
           ← Back
         </button>
@@ -284,24 +276,6 @@ export default function MonthlyReportView() {
           {generating ? "Generating Report..." : "Generate Excel Report"}
         </button>
       </div>
-
-      {showSuccess && (
-        <div
-          className="fixed left-1/2 top-8 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg"
-          role="status"
-        >
-          Report downloaded successfully
-        </div>
-      )}
-
-      {error && (
-        <div
-          className="fixed left-1/2 top-8 z-50 -translate-x-1/2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-lg"
-          role="alert"
-        >
-          {error}
-        </div>
-      )}
 
       <FilterSheet
         open={filterSheet === "month"}

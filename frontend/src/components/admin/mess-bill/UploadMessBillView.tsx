@@ -3,13 +3,14 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { HiArrowUpTray, HiTrash } from "react-icons/hi2";
+import { HiArrowUpTray, HiTrash, HiDocumentText } from "react-icons/hi2";
 import { monthNames } from "@/constants/months";
 import { useMessBills, usePublishMessBill } from "@/hooks/useApi";
 import type { MessBill } from "@/types";
 import { formatBillMonthLabel, formatDueDate } from "@/utils/messBillDisplay";
 import { Skeleton } from "@/components/student/Skeleton";
 import DeleteMessBillDialog from "./DeleteMessBillDialog";
+import EmptyState from "@/components/student/EmptyState";
 
 const currentYear = new Date().getFullYear();
 const years = [currentYear, currentYear + 1, currentYear - 1];
@@ -83,7 +84,7 @@ export default function UploadMessBillView() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)]"
+          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] active-press"
         >
           ← Back
         </button>
@@ -102,7 +103,7 @@ export default function UploadMessBillView() {
           type="file"
           accept={ACCEPT}
           onChange={handleFileChange}
-          className="mb-4 w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--mh-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--mh-primary)]"
+          className="mb-4 w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--mh-primary-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--mh-primary)] file:active-press"
         />
 
         <div className="mb-4 grid grid-cols-2 gap-3">
@@ -114,7 +115,7 @@ export default function UploadMessBillView() {
               id="bill-month"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white"
             >
               {monthNames.map((name, i) => (
                 <option key={name} value={String(i + 1)}>
@@ -131,7 +132,7 @@ export default function UploadMessBillView() {
               id="bill-year"
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white"
             >
               {years.map((y) => (
                 <option key={y} value={String(y)}>
@@ -151,7 +152,7 @@ export default function UploadMessBillView() {
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white"
             required
           />
         </div>
@@ -165,7 +166,7 @@ export default function UploadMessBillView() {
         <button
           type="submit"
           disabled={publishBill.isPending}
-          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white disabled:opacity-60"
+          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white disabled:opacity-60 active-press active:scale-[0.96]"
         >
           <HiArrowUpTray className="h-5 w-5" />
           {publishBill.isPending ? "Publishing…" : "Publish"}
@@ -182,9 +183,11 @@ export default function UploadMessBillView() {
             <Skeleton className="h-20 w-full rounded-2xl" />
           </div>
         ) : sortedBills.length === 0 ? (
-          <p className="rounded-2xl bg-white p-6 text-center text-sm text-gray-500 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-            No bills published yet.
-          </p>
+          <EmptyState
+            icon={HiDocumentText}
+            title="No bills published yet"
+            description="Upload a new PDF or Excel mess bill file above to publish it to all hostel residents."
+          />
         ) : (
           <ul className="flex flex-col gap-3">
             {sortedBills.map((bill) => (

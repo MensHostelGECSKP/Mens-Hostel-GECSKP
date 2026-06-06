@@ -6,6 +6,7 @@ import type { AttendanceRecord } from '@/types';
 import { CalendarSkeleton } from '@/components/student/Skeleton';
 import { useAuth } from '@/context/AuthContext';
 import { getStudentDayAppearance, type AttendanceDayStatus } from '@/constants/attendanceStatus';
+import toast from 'react-hot-toast';
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -69,9 +70,11 @@ export default function AttendanceCalendar({
         date: selectedDate,
         meals: modalMeals,
       });
+      toast.success("Attendance saved successfully");
       setSelectedDate(null);
     } catch (err) {
       console.error('Failed to mark attendance:', err);
+      toast.error("Failed to save attendance. Please try again.");
     }
   };
 

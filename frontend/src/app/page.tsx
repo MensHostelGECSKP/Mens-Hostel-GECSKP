@@ -109,7 +109,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => router.push(isLoggedIn ? "/dashboard" : "/login")}
-              className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-2xl bg-[var(--mh-primary)] text-sm font-semibold text-white shadow-md transition hover:bg-[var(--mh-primary)]/90 active:scale-[0.98]"
+              className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-2xl bg-[var(--mh-primary)] text-sm font-semibold text-white shadow-md transition hover:bg-[var(--mh-primary)]/90 active:scale-[0.96] active-press"
             >
               <span>{isLoggedIn ? "Go to Dashboard" : "Login"}</span>
               <HiArrowRight className="h-4 w-4" />
@@ -117,7 +117,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => router.push("/rules")}
-              className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.98]"
+              className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.96] active-press"
             >
               View Rules
             </button>
