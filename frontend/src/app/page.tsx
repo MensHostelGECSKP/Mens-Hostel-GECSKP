@@ -314,7 +314,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-1">
                 <a
-                  href="tel:+917356397311"
+                  href="tel:+918304038860"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 transition active:scale-95"
                   aria-label="Call Hashir"
                 >
