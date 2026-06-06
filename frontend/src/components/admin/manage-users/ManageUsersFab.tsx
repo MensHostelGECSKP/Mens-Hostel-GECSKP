@@ -1,11 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { HiPlus, HiUserPlus, HiArrowUpTray } from "react-icons/hi2";
 
 export default function ManageUsersFab() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -16,7 +22,11 @@ export default function ManageUsersFab() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  return (
+  if (!mounted) {
+    return null;
+  }
+
+  const fabContent = (
     <>
       {open && (
         <button
@@ -67,4 +77,6 @@ export default function ManageUsersFab() {
       </div>
     </>
   );
+
+  return createPortal(fabContent, document.body);
 }

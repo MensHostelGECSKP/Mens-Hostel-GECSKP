@@ -2,12 +2,18 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { auth, adminOnly } = require('../middleware/auth');
 const { csrfProtection } = require('../middleware/csrf');
+const { uploadExcelSingle } = require('../middleware/uploadExcel');
 const { validateYearEndReset } = require('../validators/systemValidator');
 const {
   getYearEndResetStats,
   yearEndReset,
   getAuditLogs,
 } = require('../controllers/systemController');
+const {
+  downloadTemplate,
+  previewImport,
+  executeImport,
+} = require('../controllers/importController');
 
 const router = express.Router();
 
@@ -41,6 +47,30 @@ router.get(
   auth,
   adminOnly,
   getAuditLogs
+);
+
+// Bulk User Import routes
+router.get(
+  '/import/template',
+  auth,
+  adminOnly,
+  downloadTemplate
+);
+
+router.post(
+  '/import/preview',
+  auth,
+  adminOnly,
+  uploadExcelSingle,
+  previewImport
+);
+
+router.post(
+  '/import/execute',
+  auth,
+  adminOnly,
+  csrfProtection,
+  executeImport
 );
 
 module.exports = router;
