@@ -11,13 +11,14 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-// Extend Window interface to include our custom property
+// Extend Window interface to include our custom properties
 declare global {
   interface WindowEventMap {
     beforeinstallprompt: BeforeInstallPromptEvent;
   }
   interface Window {
     triggerPWAInstall?: () => Promise<boolean>;
+    triggerPWAUpdate?: (worker: ServiceWorker) => void;
   }
 }
 
@@ -27,54 +28,82 @@ export default function PWARegistration() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          // Check if there's an existing registration
-          const existing = await navigator.serviceWorker.getRegistration();
-          if (existing?.active) {
-            // Update existing service worker
-            existing.update().catch(console.error);
-          } else {
-            // Register new service worker
-            await navigator.serviceWorker.register('/sw.js', {
-              scope: '/',
-              updateViaCache: 'none'
-            });
+          // Register the service worker
+          const registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/',
+            updateViaCache: 'none'
+          });
+
+          // Check if there is an update already waiting
+          if (registration.waiting) {
+            window.dispatchEvent(
+              new CustomEvent('pwaUpdateAvailable', { detail: registration.waiting })
+            );
           }
+
+          // Monitor the lifecycle of incoming service workers
+          registration.addEventListener('updatefound', () => {
+            const installingWorker = registration.installing;
+            if (installingWorker) {
+              installingWorker.addEventListener('statechange', () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // A new worker is installed and waiting to take control
+                  window.dispatchEvent(
+                    new CustomEvent('pwaUpdateAvailable', { detail: registration.waiting || installingWorker })
+                  );
+                }
+              });
+            }
+          });
         } catch (error) {
           console.error('Service Worker registration failed:', error);
         }
       });
 
-      // Handle service worker updates
+      // Handle controller change (reloads page when the new worker takes control)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // Optional: Show update notification to user
-        if (window.confirm('New version available! Reload to update?')) {
-          window.location.reload();
-        }
+        console.log('[PWA] Controller changed. Reloading page...');
+        window.location.reload();
       });
+
+      // Expose a method to force service worker skip waiting
+      window.triggerPWAUpdate = (worker: ServiceWorker) => {
+        if (worker) {
+          worker.postMessage({ type: 'SKIP_WAITING' });
+        }
+      };
     }
 
     // Handle PWA installation prompt
     let deferredPrompt: BeforeInstallPromptEvent | null = null;
     
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       deferredPrompt = e;
-      
+      console.log('[PWA] App is installable');
       // Dispatch event for UI to show install button
       window.dispatchEvent(new CustomEvent('pwaInstallable'));
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
 
     // Handle app installed event
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       deferredPrompt = null;
+      console.log('[PWA] App was installed');
       // Dispatch event for UI to hide install button
       window.dispatchEvent(new CustomEvent('pwaInstalled'));
-    });
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     // Handle offline/online status
     const handleOnline = () => {
       document.body.classList.remove('offline');
-      // Attempt to revalidate cached data
+      // Dispatch custom event for UI banners
+      window.dispatchEvent(new CustomEvent('pwaOnline'));
+      
+      // Attempt to sync online sync
       if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'ONLINE_SYNC' });
       }
@@ -82,6 +111,8 @@ export default function PWARegistration() {
 
     const handleOffline = () => {
       document.body.classList.add('offline');
+      // Dispatch custom event for UI banners
+      window.dispatchEvent(new CustomEvent('pwaOffline'));
     };
 
     // Set initial offline status
@@ -92,7 +123,10 @@ export default function PWARegistration() {
 
     // Expose PWA install prompt for other components
     window.triggerPWAInstall = async () => {
-      if (!deferredPrompt) return false;
+      if (!deferredPrompt) {
+        console.warn('[PWA] Cannot trigger install: prompt event not deferred yet');
+        return false;
+      }
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       deferredPrompt = null;
@@ -100,9 +134,12 @@ export default function PWARegistration() {
     };
 
     return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+      window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       delete window.triggerPWAInstall;
+      delete window.triggerPWAUpdate;
     };
   }, []);
 

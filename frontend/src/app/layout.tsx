@@ -9,6 +9,9 @@ import MainContent from "@/components/MainContent";
 import { Toaster } from "react-hot-toast";
 import PWARegistration from "@/components/PWARegistration";
 import ClientInserts from "@/components/ClientInserts";
+import OfflineBanner from "@/components/OfflineBanner";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import PWAUpdatePrompt from "@/components/PWAUpdatePrompt";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -90,7 +93,10 @@ export default function RootLayout({
             <Header />
             <MainContent>{children}</MainContent>
             <Toaster position="top-center" />
+            <OfflineBanner />
             <PWARegistration />
+            <PWAInstallPrompt />
+            <PWAUpdatePrompt />
             <ClientInserts />
           </AuthProvider>
         </QueryProvider>

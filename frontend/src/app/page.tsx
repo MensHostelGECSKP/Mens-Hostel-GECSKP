@@ -80,6 +80,17 @@ export default function Home() {
             >
               GEC Sreekrishnapuram
             </motion.p>
+            {/* Loading Indicator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.8 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              className="flex items-center justify-center gap-2 mt-6"
+            >
+              <div className="w-2 h-2 rounded-full bg-white/95 animate-bounce [animation-delay:-0.3s]" />
+              <div className="w-2 h-2 rounded-full bg-white/95 animate-bounce [animation-delay:-0.15s]" />
+              <div className="w-2 h-2 rounded-full bg-white/95 animate-bounce" />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
