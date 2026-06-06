@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import type { AttendanceRecord } from "@/types";
 
 function getDaysInMonth(year: number, month: number) {
@@ -24,7 +22,11 @@ function buildMonthRows(
   });
 }
 
-function exportMonthToPdf(year: number, month: number, records: AttendanceRecord[]) {
+async function exportMonthToPdf(year: number, month: number, records: AttendanceRecord[]) {
+  const [ { default: jsPDF }, { default: autoTable } ] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable")
+  ]);
   const doc = new jsPDF();
   const monthLabel = new Date(year, month).toLocaleString("default", {
     month: "long",

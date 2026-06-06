@@ -17,6 +17,7 @@ export const queryKeys = {
   users: ['users'] as const,
   attendanceSummary: (date: string) => ['attendanceSummary', date] as const,
   yearEndResetStats: ['yearEndResetStats'] as const,
+  auditLogs: (page: number, limit: number) => ['auditLogs', page, limit] as const,
 };
 
 export type YearEndResetStats = {
@@ -28,21 +29,6 @@ export type YearEndResetStats = {
   messBillPaymentCount?: number;
 };
 
-// User queries
-export function useUser() {
-  return useQuery<User | undefined>({
-    queryKey: queryKeys.user,
-    queryFn: async () => {
-      const response = await api.get('/api/auth/me');
-      if (response.error) throw new Error(response.error);
-      const data = response.data as { user?: User } | undefined;
-      return data?.user;
-    },
-    // Keep user data fresh; refetch on focus to recover from sleep/idle
-    staleTime: 0,
-    refetchOnWindowFocus: true,
-  });
-}
 
 // Attendance queries
 export function useAttendance(month: string) {
@@ -368,5 +354,39 @@ export function useYearEndReset() {
       queryClient.invalidateQueries({ queryKey: ['attendance'] });
       queryClient.invalidateQueries({ queryKey: ['attendanceSummary'] });
     },
+  });
+}
+
+export type AuditLogEntry = {
+  _id: string;
+  action: string;
+  performedBy: string | null;
+  performedByName: string;
+  targetId: string | null;
+  details: Record<string, any>;
+  ipAddress: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AuditLogsResponse = {
+  logs: AuditLogEntry[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+};
+
+export function useAuditLogs(page: number = 1, limit: number = 50) {
+  return useQuery<AuditLogsResponse>({
+    queryKey: queryKeys.auditLogs(page, limit),
+    queryFn: async () => {
+      const response = await api.get(`/api/system/audit-logs?page=${page}&limit=${limit}`);
+      if (response.error) throw new Error(response.error);
+      return response.data as AuditLogsResponse;
+    },
+    staleTime: 5000,
   });
 }

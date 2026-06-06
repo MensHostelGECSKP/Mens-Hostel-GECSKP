@@ -19,7 +19,7 @@ const upload = multer({
   fileFilter: (_req, file, cb) => {
     const extOk = ALLOWED_EXT.test(file.originalname || '');
     const mimeOk = ALLOWED_MIMES.has(file.mimetype);
-    if (extOk || mimeOk) {
+    if (extOk && mimeOk) {
       return cb(null, true);
     }
     cb(new Error('INVALID_FILE'));

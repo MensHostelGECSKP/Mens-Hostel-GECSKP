@@ -1,4 +1,4 @@
-const { addDays, startOfDay, isSameDay } = require('date-fns');
+const { addDays, startOfDay, endOfDay, isSameDay } = require('date-fns');
 const { toZonedTime } = require('date-fns-tz');
 const MessBill = require('../models/MessBill');
 const MessBillPayment = require('../models/MessBillPayment');
@@ -17,13 +17,16 @@ function todayInTimezone() {
 async function processRemindersForOffset(daysBefore, reminderField, type, titlePrefix) {
   const today = todayInTimezone();
   const targetDue = addDays(today, daysBefore);
+  const targetDueStart = startOfDay(targetDue);
+  const targetDueEnd = endOfDay(targetDue);
 
-  const bills = await MessBill.find({ isPublished: true });
+  const bills = await MessBill.find({
+    isPublished: true,
+    dueDate: { $gte: targetDueStart, $lte: targetDueEnd },
+  });
   let sent = 0;
 
   for (const bill of bills) {
-    const due = startOfDay(new Date(bill.dueDate));
-    if (!isSameDay(due, targetDue)) continue;
 
     const label = formatBillMonthLabel(bill.month, bill.year);
     const dueStr = formatDueDate(bill.dueDate);

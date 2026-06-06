@@ -69,7 +69,7 @@ async function markAttendance(userId, date, meals) {
  */
 async function getMonthAttendance(userId, month) {
   const regex = new RegExp(`^${month}-\\d{2}$`); // Matches YYYY-MM-XX
-  return await Attendance.find({ userId, date: { $regex: regex } });
+  return await Attendance.find({ userId, date: { $regex: regex } }).select('date meals -_id');
 }
 
 /**
@@ -77,7 +77,7 @@ async function getMonthAttendance(userId, month) {
  */
 async function getAdminSummary(date) {
   // Get all users (students only)
-  const users = await User.find({ role: 'student' });
+  const users = await User.find({ role: 'student' }).select('name email');
   // Get all attendance records for the date
   const attendanceRecords = await Attendance.find({ date });
   // Map userId to attendance
@@ -114,7 +114,7 @@ async function getAdminSummary(date) {
  */
 async function generateMonthlyReport(startDate, endDate) {
   const User = require('../models/User');
-  const students = await User.find({ role: 'student' });
+  const students = await User.find({ role: 'student' }).select('name roomNumber yearOfStudy');
   const attendanceRecords = await Attendance.find({
     date: { $gte: startDate, $lte: endDate },
   });
@@ -156,7 +156,7 @@ async function generateMonthlyReport(startDate, endDate) {
  * Generate monthly report data for specific dates
  */
 async function generateMonthlyReportForDates(dates) {
-  const students = await User.find({ role: 'student' });
+  const students = await User.find({ role: 'student' }).select('name roomNumber yearOfStudy');
   const attendanceRecords = await Attendance.find({ date: { $in: dates } });
   
   const summary = [];

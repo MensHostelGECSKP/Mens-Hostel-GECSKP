@@ -2,8 +2,7 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import type jsPDF from "jspdf";
 import AdminOverviewCard from "@/components/admin/AdminOverviewCard";
 import AdminActionGrid from "@/components/admin/AdminActionGrid";
 import AdminAttendanceSummary from "@/components/admin/AdminAttendanceSummary";
@@ -103,8 +102,12 @@ export default function AdminDashboard() {
     }
   }, [refetchUsers, refetchNotifications, refetchBills, refetchSummary, fetchDate]);
 
-  const exportSummaryToPDF = () => {
+  const exportSummaryToPDF = async () => {
     if (!attendanceSummary?.summary || !fetchDate) return;
+    const [ { default: jsPDF }, { default: autoTable } ] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable")
+    ]);
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text("Mess Cut Summary", 14, 18);

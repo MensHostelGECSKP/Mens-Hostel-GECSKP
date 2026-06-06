@@ -12,5 +12,6 @@ const attendanceSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 attendanceSchema.index({ userId: 1, date: 1 }, { unique: true }); // Prevent duplicate entries per user per day
+attendanceSchema.index({ date: 1 });
 
 module.exports = mongoose.model('Attendance', attendanceSchema); 

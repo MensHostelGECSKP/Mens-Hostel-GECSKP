@@ -1,5 +1,7 @@
 const yearEndResetService = require('../services/yearEndResetService');
 const { ERROR_CODES } = require('../constants/errors');
+const { logAuditEvent } = require('../utils/auditLogger');
+const AuditLog = require('../models/AuditLog');
 
 async function getYearEndResetStats(req, res, next) {
   try {
@@ -13,20 +15,13 @@ async function getYearEndResetStats(req, res, next) {
 async function yearEndReset(req, res, next) {
   try {
     const result = await yearEndResetService.performYearEndReset();
-    console.info('[year-end-reset] Completed by admin', {
-      adminId: req.user?.userId,
-      deleted: result.deleted,
-    });
+    await logAuditEvent(req, 'YEAR_END_RESET', { deleted: result.deleted });
     res.json({
       message: 'Academic year reset complete',
       ...result,
     });
   } catch (err) {
-    console.error('[year-end-reset] Failed:', {
-      adminId: req.user?.userId,
-      message: err.message,
-      stack: err.stack,
-    });
+    await logAuditEvent(req, 'YEAR_END_RESET_FAILED', { error: err.message });
     return res.status(500).json({
       error:
         'Unable to complete reset. Please try again or contact the administrator.',
@@ -35,7 +30,36 @@ async function yearEndReset(req, res, next) {
   }
 }
 
+async function getAuditLogs(req, res, next) {
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await Promise.all([
+      AuditLog.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      AuditLog.countDocuments(),
+    ]);
+
+    res.json({
+      logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getYearEndResetStats,
   yearEndReset,
+  getAuditLogs,
 };

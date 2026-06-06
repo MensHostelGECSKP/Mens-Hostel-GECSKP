@@ -17,11 +17,16 @@ export default function NotificationsPage() {
   const [genericFormError, setGenericFormError] = useState("");
   const [readIds, setReadIds] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
   
   // Use React Query hooks
   const { data: notifications = [], isLoading: loading, error, refetch } = useNotifications();
   const createNotificationMutation = useCreateNotification();
   const deleteNotificationMutation = useDeleteNotification();
+
+  const visibleNotifications = React.useMemo(() => {
+    return notifications.slice(0, pageSize);
+  }, [notifications, pageSize]);
 
   // Load read notifications from localStorage on mount
   useEffect(() => {
@@ -245,87 +250,98 @@ export default function NotificationsPage() {
               description="Important announcements and updates published by the hostel warden or clerk will appear here."
             />
           ) : (
-            <ul className="flex flex-col gap-3.5">
-              {notifications.map((n) => {
-                const isRead = readIds.includes(n._id);
-                return (
-                  <li 
-                    key={n._id} 
-                    onClick={() => handleMarkAsRead(n._id)}
-                    className={`relative flex flex-col items-stretch bg-white hover:bg-slate-50/50 rounded-2xl p-4 shadow-sm border transition-all duration-200 cursor-pointer ${
-                      isRead ? "border-gray-100" : "border-indigo-100 bg-indigo-50/15"
-                    }`}
-                  >
-                    {!isRead && (
-                      <span className="absolute top-4.5 left-4.5 flex h-2.5 w-2.5 rounded-full bg-indigo-600" aria-hidden />
-                    )}
-                    <div className={`flex-1 text-left ${!isRead ? "pl-5" : ""}`}>
-                      <span className={`text-base font-bold ${isRead ? "text-gray-900" : "text-indigo-950"}`}>{n.title}</span>
-                      <div className="text-[11px] font-medium text-gray-400 mt-0.5">{new Date(n.createdAt).toLocaleString()}</div>
-                      {n.type && (
-                        <span className="inline-block text-[10px] uppercase font-bold tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md mt-1.5">
-                          {n.type}
-                        </span>
+            <div className="flex flex-col gap-4">
+              <ul className="flex flex-col gap-3.5">
+                {visibleNotifications.map((n) => {
+                  const isRead = readIds.includes(n._id);
+                  return (
+                    <li 
+                      key={n._id} 
+                      onClick={() => handleMarkAsRead(n._id)}
+                      className={`relative flex flex-col items-stretch bg-white hover:bg-slate-50/50 rounded-2xl p-4 shadow-sm border transition-all duration-200 cursor-pointer ${
+                        isRead ? "border-gray-100" : "border-indigo-100 bg-indigo-50/15"
+                      }`}
+                    >
+                      {!isRead && (
+                        <span className="absolute top-4.5 left-4.5 flex h-2.5 w-2.5 rounded-full bg-indigo-600" aria-hidden />
                       )}
-                      {n.message && <div className="text-[13px] text-gray-600 mt-2.5 leading-relaxed whitespace-pre-line font-medium">{n.message}</div>}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-4 pt-3.5 border-t border-gray-100/60 justify-end">
-                      {(n.type?.startsWith("mess_bill") || n.messBillId) && (
-                        <Link
-                          href="/mess-bill"
-                          className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100/50 transition active:scale-95 active-press text-xs font-semibold"
-                        >
-                          View Bills
-                        </Link>
-                      )}
-                      {n.pdfUrl && (
-                        <>
-                          <a
-                            href={n.pdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-100 transition active:scale-95 active-press text-xs font-semibold"
+                      <div className={`flex-1 text-left ${!isRead ? "pl-5" : ""}`}>
+                        <span className={`text-base font-bold ${isRead ? "text-gray-900" : "text-indigo-950"}`}>{n.title}</span>
+                        <div className="text-[11px] font-medium text-gray-400 mt-0.5">{new Date(n.createdAt).toLocaleString()}</div>
+                        {n.type && (
+                          <span className="inline-block text-[10px] uppercase font-bold tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md mt-1.5">
+                            {n.type}
+                          </span>
+                        )}
+                        {n.message && <div className="text-[13px] text-gray-600 mt-2.5 leading-relaxed whitespace-pre-line font-medium">{n.message}</div>}
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-4 pt-3.5 border-t border-gray-100/60 justify-end">
+                        {(n.type?.startsWith("mess_bill") || n.messBillId) && (
+                          <Link
+                            href="/mess-bill"
+                            className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100/50 transition active:scale-95 active-press text-xs font-semibold"
                           >
-                            <HiOutlineExternalLink className="text-sm" /> Preview
-                          </a>
-                          <a
-                            href={n.pdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download
-                            className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition active:scale-95 active-press text-xs font-semibold"
+                            View Bills
+                          </Link>
+                        )}
+                        {n.pdfUrl && (
+                          <>
+                            <a
+                              href={n.pdfUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-100 transition active:scale-95 active-press text-xs font-semibold"
+                            >
+                              <HiOutlineExternalLink className="text-sm" /> Preview
+                            </a>
+                            <a
+                              href={n.pdfUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download
+                              className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition active:scale-95 active-press text-xs font-semibold"
+                            >
+                              <HiOutlineDocumentDownload className="text-sm" /> Download
+                            </a>
+                          </>
+                        )}
+                        {user?.role === "admin" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // prevent mark read triggering
+                              handleDeleteNotification(n._id);
+                            }}
+                            disabled={deletingNotification === n._id}
+                            className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100/70 transition active:scale-95 active-press text-xs font-semibold disabled:opacity-50"
+                            title="Delete notification"
                           >
-                            <HiOutlineDocumentDownload className="text-sm" /> Download
-                          </a>
-                        </>
-                      )}
-                      {user?.role === "admin" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation(); // prevent mark read triggering
-                            handleDeleteNotification(n._id);
-                          }}
-                          disabled={deletingNotification === n._id}
-                          className="inline-flex min-h-[36px] items-center gap-1 px-3 py-1.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100/70 transition active:scale-95 active-press text-xs font-semibold disabled:opacity-50"
-                          title="Delete notification"
-                        >
-                          {deletingNotification === n._id ? (
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                            </svg>
-                          ) : (
-                            <>
-                              <HiOutlineTrash className="text-sm" /> Delete
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                            {deletingNotification === n._id ? (
+                              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                              </svg>
+                            ) : (
+                              <>
+                                <HiOutlineTrash className="text-sm" /> Delete
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {notifications.length > pageSize && (
+                <button
+                  type="button"
+                  onClick={() => setPageSize((prev) => prev + 10)}
+                  className="w-full py-3 mt-2 text-center text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-2xl border border-dashed border-indigo-200 transition active:scale-[0.98] active-press"
+                >
+                  + Show More ({notifications.length - pageSize} left)
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

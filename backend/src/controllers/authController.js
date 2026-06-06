@@ -1,6 +1,7 @@
 const authService = require('../services/authService');
 const config = require('../config');
 const { ERROR_CODES } = require('../constants/errors');
+const { logAuditEvent } = require('../utils/auditLogger');
 
 /**
  * Register a new user (admin only)
@@ -8,7 +9,7 @@ const { ERROR_CODES } = require('../constants/errors');
 async function register(req, res, next) {
   try {
     const { name, email, password, role, yearOfStudy, roomNumber } = req.validated;
-    await authService.registerUser({
+    const user = await authService.registerUser({
       name,
       email,
       password,
@@ -16,6 +17,7 @@ async function register(req, res, next) {
       yearOfStudy,
       roomNumber,
     });
+    await logAuditEvent(req, 'USER_REGISTER', { name, email, role, yearOfStudy, roomNumber }, user._id);
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
     if (err.message === 'DUPLICATE_ENTRY') {
@@ -204,6 +206,7 @@ async function updateUser(req, res, next) {
       ...updates,
       yearOfStudy: year,
     });
+    await logAuditEvent(req, 'USER_UPDATE', { userId, updates: { name: updates.name, email: updates.email, roomNumber: updates.roomNumber, yearOfStudy: year, status: updates.status } }, userId);
     res.json({
       message: 'User updated successfully',
       user: authService.formatPublicUser(user),
@@ -232,6 +235,7 @@ async function deleteUser(req, res, next) {
   try {
     const { userId } = req.params;
     await authService.deleteStudentById(userId);
+    await logAuditEvent(req, 'USER_DELETE', { userId }, userId);
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
     if (err.message === 'USER_NOT_FOUND') {

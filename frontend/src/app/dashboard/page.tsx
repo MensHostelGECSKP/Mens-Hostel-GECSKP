@@ -1,10 +1,17 @@
 "use client";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import AdminDashboard from "@/components/admin/AdminDashboard";
-import StudentDashboard from "@/components/student/StudentDashboard";
+import dynamic from "next/dynamic";
 import { useAuth, useCurrentUser } from "@/context/AuthContext";
 import Spinner from "@/components/Spinner";
+
+const AdminDashboard = dynamic(() => import("@/components/admin/AdminDashboard"), {
+  loading: () => <Spinner className="min-h-[50vh]" />,
+});
+
+const StudentDashboard = dynamic(() => import("@/components/student/StudentDashboard"), {
+  loading: () => <Spinner className="min-h-[50vh]" />,
+});
 
 function DashboardContent() {
   const router = useRouter();

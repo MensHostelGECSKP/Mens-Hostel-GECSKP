@@ -1,5 +1,6 @@
 const messBillService = require('../services/messBillService');
 const { ERROR_CODES } = require('../constants/errors');
+const { logAuditEvent } = require('../utils/auditLogger');
 
 async function publishMessBill(req, res, next) {
   try {
@@ -11,7 +12,7 @@ async function publishMessBill(req, res, next) {
       file: req.file,
       uploadedBy: req.user.userId,
     });
-
+    await logAuditEvent(req, 'MESS_BILL_PUBLISH', { month, year, dueDate, fileName: req.file?.originalname }, result.bill?._id);
     res.status(201).json({
       message: 'Mess bill published',
       bill: result.bill,
@@ -55,6 +56,7 @@ async function updatePaymentStatus(req, res, next) {
       req.user.userId,
       isPaid
     );
+    await logAuditEvent(req, 'MESS_BILL_PAYMENT_UPDATE', { billId: req.params.id, isPaid }, req.params.id);
     res.json({
       message: isPaid ? 'Marked as paid' : 'Marked as unpaid',
       ...result,
@@ -73,6 +75,7 @@ async function updatePaymentStatus(req, res, next) {
 async function deleteMessBill(req, res, next) {
   try {
     await messBillService.deleteMessBill(req.params.id);
+    await logAuditEvent(req, 'MESS_BILL_DELETE', { billId: req.params.id }, req.params.id);
     res.json({ message: 'Mess bill deleted' });
   } catch (err) {
     if (err.message === 'NOT_FOUND') {

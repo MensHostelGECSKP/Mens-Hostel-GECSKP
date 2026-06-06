@@ -115,7 +115,9 @@ app.use(errorHandler);
 
 // Connect to MongoDB
 mongoose.connect(config.mongodbUri, {
-  // Add connection options for better reliability
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
 })
   .then(() => {
     console.log('Connected to MongoDB');

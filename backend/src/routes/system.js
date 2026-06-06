@@ -6,6 +6,7 @@ const { validateYearEndReset } = require('../validators/systemValidator');
 const {
   getYearEndResetStats,
   yearEndReset,
+  getAuditLogs,
 } = require('../controllers/systemController');
 
 const router = express.Router();
@@ -33,6 +34,13 @@ router.post(
   csrfProtection,
   validateYearEndReset,
   yearEndReset
+);
+
+router.get(
+  '/audit-logs',
+  auth,
+  adminOnly,
+  getAuditLogs
 );
 
 module.exports = router;

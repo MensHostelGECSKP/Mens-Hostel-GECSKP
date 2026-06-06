@@ -47,6 +47,7 @@ export default function ManageUsersView() {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [deactivateUser, setDeactivateUser] = useState<User | null>(null);
+  const [pageSize, setPageSize] = useState(20);
 
   const {
     students,
@@ -56,6 +57,14 @@ export default function ManageUsersView() {
     isSearchPending,
     totalCount,
   } = useFilteredResidents(users, search, filters);
+
+  React.useEffect(() => {
+    setPageSize(20);
+  }, [search, filters]);
+
+  const visibleFiltered = React.useMemo(() => {
+    return filtered.slice(0, pageSize);
+  }, [filtered, pageSize]);
 
   const clearFilters = useCallback(() => {
     setSearch("");
@@ -160,20 +169,31 @@ export default function ManageUsersView() {
         ) : !error && filtered.length === 0 ? (
           <ManageUsersEmpty variant="no-results" onClearFilters={clearFilters} />
         ) : (
-          <ul className="flex flex-col gap-2.5 transition-opacity duration-200">
-            {filtered.map((user) => (
-              <li key={user.userId}>
-                <ResidentCard
-                  user={user}
-                  menuOpen={openMenuUserId === user.userId}
-                  onMenuOpenChange={(open) =>
-                    setOpenMenuUserId(open ? user.userId : null)
-                  }
-                  onAction={handleMenuAction}
-                />
-              </li>
-            ))}
-          </ul>
+          <div className="flex flex-col gap-4">
+            <ul className="flex flex-col gap-2.5 transition-opacity duration-200">
+              {visibleFiltered.map((user) => (
+                <li key={user.userId}>
+                  <ResidentCard
+                    user={user}
+                    menuOpen={openMenuUserId === user.userId}
+                    onMenuOpenChange={(open) =>
+                      setOpenMenuUserId(open ? user.userId : null)
+                    }
+                    onAction={handleMenuAction}
+                  />
+                </li>
+              ))}
+            </ul>
+            {filtered.length > pageSize && (
+              <button
+                type="button"
+                onClick={() => setPageSize((prev) => prev + 20)}
+                className="w-full py-3 text-center text-sm font-semibold text-[var(--mh-primary)] hover:bg-[var(--mh-primary-soft)] rounded-2xl border border-dashed border-[var(--mh-primary)]/30 transition active:scale-[0.98] active-press"
+              >
+                + Show More ({filtered.length - pageSize} left)
+              </button>
+            )}
+          </div>
         )}
       </div>
 
