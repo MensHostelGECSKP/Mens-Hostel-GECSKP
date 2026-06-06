@@ -13,7 +13,7 @@ const links = [
   { href: "/dashboard/create-user", label: "Create User" },
   { href: "/dashboard/manage-users", label: "Manage Users" },
   { href: "/dashboard/monthly-report", label: "Monthly Report" },
-  { href: "/dashboard/settings", label: "Settings" },
+  { href: "/profile", label: "Profile" },
   { href: "/rules", label: "Rules" },
   { href: "/", label: "Public Home" },
 ];

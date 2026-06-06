@@ -54,7 +54,6 @@ const adminDesktopLinks = [
   { href: "/dashboard/manage-users", label: "Manage Users", icon: HiUsers },
   { href: "/dashboard/create-user", label: "Create User", icon: HiUserPlus },
   { href: "/dashboard/monthly-report", label: "Monthly Report", icon: HiDocumentText },
-  { href: "/dashboard/settings", label: "Settings", icon: HiCog6Tooth },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = false, adminMode = false }: SidebarProps) {
