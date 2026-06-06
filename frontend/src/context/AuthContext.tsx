@@ -1,15 +1,16 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { api } from "@/utils/api";
-import type { UserData } from '@/types';
+import type { User } from "@/types";
 
 type AuthContextType = {
   isLoggedIn: boolean;
   setIsLoggedIn: (v: boolean) => void;
   loading: boolean;
-  user: UserData | null;
-  updateUserFromToken: () => void; // Add function to manually update user
-  logout: () => void; // Add logout function
+  user: User | null;
+  updateUserFromToken: () => void;
+  refreshUser: () => Promise<void>;
+  logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,7 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   // Function to update user from token (fallback)
   const updateUserFromToken = useCallback(() => {
@@ -25,11 +26,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token) {
       try {
         const decoded = JSON.parse(atob(token.split(".")[1]));
-        const newUser = {
+        const newUser: User = {
           name: decoded.name || "",
           email: decoded.email || "",
           role: decoded.role || "student",
           userId: decoded.userId || "",
+          ...(decoded.role === "student"
+            ? {
+                yearOfStudy: decoded.yearOfStudy || "",
+                roomNumber: decoded.roomNumber || "",
+              }
+            : {}),
         };
         setUser(prevUser => {
           // Only update if the user actually changed
@@ -63,6 +70,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const response = await api.get("/api/auth/me");
+    if (response.error) throw new Error(response.error);
+    const data = response.data as { user?: User } | undefined;
+    if (data?.user) {
+      setUser(data.user);
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem("token");
@@ -70,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Try to fetch user from server first
         try {
           const response = await api.get('/api/auth/me');
-    const data = response.data as { user?: UserData } | undefined;
+          const data = response.data as { user?: User } | undefined;
           if (data?.user) {
             setUser(data.user);
             setIsLoggedIn(true);
@@ -117,8 +136,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     user,
     updateUserFromToken,
+    refreshUser,
     logout
-  }), [isLoggedIn, loading, user, updateUserFromToken, logout]);
+  }), [isLoggedIn, loading, user, updateUserFromToken, refreshUser, logout]);
 
   return (
     <AuthContext.Provider value={contextValue}>

@@ -24,12 +24,20 @@ export default function CreateUserPage() {
     handleBlur,
     handleSubmit,
   } = useForm({
-    initialValues: { name: "", email: "", password: "" },
+    initialValues: {
+      name: "",
+      email: "",
+      password: "",
+      yearOfStudy: "",
+      roomNumber: "",
+    },
     validate: (vals) => {
       const errs: Record<string, string> = {};
-      if (!vals.name) errs.name = "Name is required";
+      if (!vals.name.trim()) errs.name = "Name is required";
       if (!validateEmail(vals.email)) errs.email = "Enter a valid email address";
       if (!validatePassword(vals.password)) errs.password = "Password must be at least 6 characters";
+      if (!vals.yearOfStudy.trim()) errs.yearOfStudy = "Year of study is required";
+      if (!vals.roomNumber.trim()) errs.roomNumber = "Room number is required";
       return errs;
     },
     onSubmit: async (vals) => {
@@ -49,7 +57,7 @@ export default function CreateUserPage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-2 py-6">
-      <div className="w-full max-w-xs sm:max-w-sm">
+      <div className="w-full max-w-xs sm:max-w-md">
         <div className="bg-white/95 rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-100 flex flex-col items-center">
           <h1 className="text-xl sm:text-2xl font-semibold text-center text-indigo-700 mb-4">Create User</h1>
           {submitting || createUserMutation.isPending ? (
@@ -74,6 +82,47 @@ export default function CreateUserPage() {
                   placeholder="Enter full name"
                 />
                 {errors.name && touched.name && <div id="name-error" className="text-red-500 text-xs mt-1">{errors.name}</div>}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="yearOfStudy" className="block text-gray-700 font-medium mb-1">Year</label>
+                  <input
+                    id="yearOfStudy"
+                    type="text"
+                    inputMode="numeric"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 text-base text-gray-900 placeholder-gray-500 ${errors.yearOfStudy && touched.yearOfStudy ? 'border-red-400' : ''}`}
+                    name="yearOfStudy"
+                    value={values.yearOfStudy}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                    aria-invalid={!!errors.yearOfStudy}
+                    aria-describedby="year-error"
+                    placeholder="e.g. 2"
+                  />
+                  {errors.yearOfStudy && touched.yearOfStudy && (
+                    <div id="year-error" className="text-red-500 text-xs mt-1">{errors.yearOfStudy}</div>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="roomNumber" className="block text-gray-700 font-medium mb-1">Room</label>
+                  <input
+                    id="roomNumber"
+                    type="text"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 text-base text-gray-900 placeholder-gray-500 ${errors.roomNumber && touched.roomNumber ? 'border-red-400' : ''}`}
+                    name="roomNumber"
+                    value={values.roomNumber}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                    aria-invalid={!!errors.roomNumber}
+                    aria-describedby="room-error"
+                    placeholder="e.g. A-12"
+                  />
+                  {errors.roomNumber && touched.roomNumber && (
+                    <div id="room-error" className="text-red-500 text-xs mt-1">{errors.roomNumber}</div>
+                  )}
+                </div>
               </div>
               <div>
                 <label htmlFor="email" className="block text-gray-700 font-medium mb-1">Email</label>

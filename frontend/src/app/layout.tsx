@@ -1,13 +1,21 @@
+import React from 'react';
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import QueryProvider from "@/providers/QueryProvider";
 import Header from "@/components/Header";
+import MainContent from "@/components/MainContent";
 import { Toaster } from "react-hot-toast";
 import PWARegistration from "@/components/PWARegistration";
 import ClientInserts from "@/components/ClientInserts";
 
-// const inter = Inter({ subsets: ["latin"] });
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-manrope",
+  weight: ["500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "MH App - Mess Management",
@@ -53,7 +61,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#4f46e5',
+  themeColor: '#5D5FEF',
 };
 
 export default function RootLayout({
@@ -62,10 +70,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={manrope.variable}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#4f46e5" />
+        <meta name="theme-color" content="#5D5FEF" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="MH App" />
@@ -76,13 +84,11 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-16x16.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body className={`bg-gray-50`}>
+      <body className={`${manrope.className} bg-[var(--mh-surface)] font-sans antialiased`}>
         <QueryProvider>
           <AuthProvider>
             <Header />
-            <main className="pt-14 md:pl-56 bg-white min-h-screen">
-          {children}
-            </main>
+            <MainContent>{children}</MainContent>
             <Toaster position="top-center" />
             <PWARegistration />
             <ClientInserts />

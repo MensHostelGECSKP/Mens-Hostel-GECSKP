@@ -192,8 +192,12 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        const errMsg =
+          (typeof data.error === 'string' && data.error) ||
+          data.message ||
+          `HTTP ${response.status}`;
         return {
-          error: data.message || `HTTP ${response.status}`,
+          error: errMsg,
           message: data.message,
         };
       }
@@ -226,8 +230,131 @@ class ApiClient {
     });
   }
 
+  async patch<T = unknown>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
   async delete<T = unknown>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'DELETE' });
+  }
+
+  /** Multipart upload (omit Content-Type so the browser sets the boundary). */
+  async upload<T = unknown>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+    const url = `${this.baseURL}${endpoint}`;
+    await this.ensureCsrf();
+
+    const headers: Record<string, string> = {
+      ...this.getAuthHeaders(endpoint),
+    };
+
+    const config: RequestInit = {
+      method: 'POST',
+      body: formData,
+      headers,
+      credentials: 'include',
+    };
+
+    try {
+      let response = await fetch(url, config);
+
+      if (response.status === 403) {
+        await this.fetchCSRFToken();
+        config.headers = {
+          ...headers,
+          ...(this.csrfToken ? { 'X-CSRF-Token': this.csrfToken } : {}),
+        };
+        response = await fetch(url, config);
+      }
+
+      if (response.status === 401 && localStorage.getItem('token')) {
+        const newToken = await this.refreshToken();
+        if (newToken) {
+          config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${newToken}`,
+          };
+          response = await fetch(url, config);
+        }
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errMsg =
+          (typeof data.error === 'string' && data.error) ||
+          data.message ||
+          `HTTP ${response.status}`;
+        return { error: errMsg, message: data.message };
+      }
+
+      return { data };
+    } catch (err: unknown) {
+      console.error('API upload failed:', err);
+      return {
+        error: err instanceof Error ? err.message : 'Network error',
+      };
+    }
+  }
+
+  /**
+   * Mess bill view/download — returns the file as a blob from local storage.
+   */
+  async getBillFileAccess(
+    endpoint: string
+  ): Promise<{ url?: string; blob?: Blob; error?: string }> {
+    const url = `${this.baseURL}${endpoint}`;
+    const token = localStorage.getItem('token');
+
+    try {
+      let response = await fetch(url, {
+        method: 'GET',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
+      });
+
+      if (response.status === 401 && token) {
+        const newToken = await this.refreshToken();
+        if (newToken) {
+          response = await fetch(url, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${newToken}` },
+            credentials: 'include',
+          });
+        }
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        if (!response.ok) {
+          return {
+            error:
+              (typeof data.error === 'string' && data.error) ||
+              data.message ||
+              `HTTP ${response.status}`,
+          };
+        }
+        if (typeof data.url === 'string') {
+          return { url: data.url };
+        }
+        return { error: 'File link unavailable' };
+      }
+
+      if (!response.ok) {
+        return { error: `HTTP ${response.status}` };
+      }
+
+      return { blob: await response.blob() };
+    } catch (err: unknown) {
+      console.error('Bill file access failed:', err);
+      return {
+        error: err instanceof Error ? err.message : 'Network error',
+      };
+    }
   }
 
   // Special method for file downloads

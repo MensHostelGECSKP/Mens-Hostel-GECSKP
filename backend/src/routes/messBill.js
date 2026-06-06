@@ -1,44 +1,55 @@
 const express = require('express');
-const MessBill = require('../models/MessBill');
 const { auth, adminOnly } = require('../middleware/auth');
+const { csrfProtection } = require('../middleware/csrf');
+const { uploadMessBillSingle } = require('../middleware/uploadMessBill');
+const {
+  validatePublishMessBill,
+  validatePaymentStatus,
+} = require('../validators/messBillValidator');
+const {
+  publishMessBill,
+  getAllMessBills,
+  getMessBillById,
+  viewMessBillFile,
+  downloadMessBillFile,
+  updatePaymentStatus,
+  deleteMessBill,
+} = require('../controllers/messBillController');
 
 const router = express.Router();
 
-// Add a new mess bill (admin only)
-router.post('/', auth, adminOnly, async (req, res) => {
-  try {
-    const { month, year, previewUrl, url } = req.body;
-    if (!month || !year || !previewUrl || !url) {
-      return res.status(400).json({ message: 'All fields are required.' });
-    }
-    const bill = new MessBill({ month, year, previewUrl, url });
-    await bill.save();
-    res.status(201).json({ message: 'Mess bill added', bill });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.post(
+  '/publish',
+  auth,
+  adminOnly,
+  csrfProtection,
+  uploadMessBillSingle,
+  validatePublishMessBill,
+  publishMessBill
+);
 
-// Get all mess bills (public)
-router.get('/', async (req, res) => {
-  try {
-    const bills = await MessBill.find().sort({ year: -1, month: -1 });
-    res.json({ bills });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.get('/', auth, getAllMessBills);
+router.get('/:id/view', auth, viewMessBillFile);
+router.get('/:id/download', auth, downloadMessBillFile);
+router.get('/:id', auth, getMessBillById);
 
-// Delete a mess bill (admin only)
-router.delete('/:id', auth, adminOnly, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const bill = await MessBill.findByIdAndDelete(id);
-    if (!bill) return res.status(404).json({ message: 'Bill not found' });
-    res.json({ message: 'Mess bill deleted' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+function studentOnly(req, res, next) {
+  if (req.user?.role === 'student') return next();
+  return res.status(403).json({
+    error: 'Only students can update payment status',
+    code: 'ADMIN_REQUIRED',
+  });
+}
 
-module.exports = router; 
+router.patch(
+  '/:id/payment',
+  auth,
+  csrfProtection,
+  studentOnly,
+  validatePaymentStatus,
+  updatePaymentStatus
+);
+
+router.delete('/:id', auth, adminOnly, csrfProtection, deleteMessBill);
+
+module.exports = router;

@@ -1,30 +1,183 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f8f9fb;
+  --foreground: #111827;
+  --mh-primary: #4441CC;
+  --mh-primary-soft: #eeeeff;
+  --mh-surface: #f8f9fb;
+  --mh-text-secondary: #6b7280;
+  --mh-text-muted: #9ca3af;
+  --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Mobile bottom tab bar — keep sheets/cards flush above it */
+  --mh-bottom-nav-offset: calc(4.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 body {
-  background: var(--background);
+  background: var(--mh-surface);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Add subtle transitions to all interactive elements */
-button, a {
-  transition: all 0.2s ease-in-out;
+/* Student dashboard typography (Figma-aligned hierarchy) */
+.mh-app-title {
+  font-size: 1.0625rem; /* 17px */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-/* Add a subtle hover effect to cards or containers */
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.mh-welcome {
+  font-size: 1.375rem; /* 22px */
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.mh-display-name {
+  font-size: 1.875rem; /* 30px */
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.mh-section-title {
+  font-size: 1.0625rem; /* 17px */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.mh-badge {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.mh-legend-label {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--mh-text-secondary);
+}
+
+.mh-calendar-month {
+  font-size: 1rem; /* 16px */
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.mh-calendar-weekday {
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--mh-text-muted);
+}
+
+.mh-calendar-day {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.mh-nav-label {
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.mh-nav-label-active {
+  font-weight: 600;
+}
+
+button,
+a {
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-in {
+  animation-duration: 0.25s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.slide-in-from-bottom {
+  animation-name: slide-in-from-bottom;
+}
+
+.slide-in-from-left {
+  animation-name: slide-in-from-left;
+}
+
+.duration-200 {
+  animation-duration: 0.2s;
+}
+
+.duration-300 {
+  animation-duration: 0.3s;
+}
+
+/* Bottom sheets / cards anchored above the mobile tab bar */
+@layer utilities {
+  .mh-above-bottom-nav {
+    bottom: var(--mh-bottom-nav-offset);
+  }
+
+  .mh-overlay-above-bottom-nav {
+    bottom: var(--mh-bottom-nav-offset);
+  }
+
+  @media (min-width: 768px) {
+    .mh-above-bottom-nav {
+      bottom: 0;
+    }
+
+    .mh-overlay-above-bottom-nav {
+      bottom: 0;
+    }
+  }
 }

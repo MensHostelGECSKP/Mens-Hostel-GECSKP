@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import { useCurrentUser } from "@/context/AuthContext";
 import { HiOutlineDocumentDownload, HiOutlineExternalLink, HiOutlineTrash } from "react-icons/hi";
 import { useForm } from "@/utils/useForm";
 import { useNotifications, useCreateNotification, useDeleteNotification } from "@/hooks/useApi";
+import type { Notification } from "@/types";
 import Spinner from "@/components/Spinner";
-import { FormButton, IconButton } from '@/components/ui'
-import type { NotificationItem } from '@/types';
 
 export default function NotificationsPage() {
   const user = useCurrentUser();
@@ -27,16 +27,17 @@ export default function NotificationsPage() {
     handleChange,
     handleBlur,
     handleSubmit,
+    setErrors,
     setValues,
   } = useForm({
     initialValues: { title: "", message: "", pdfUrl: "", type: "" },
     validate: (vals) => {
       const errs: { [key: string]: string } = {};
       if (!vals.title) errs.title = "Title is required.";
-      if (!vals.pdfUrl) errs.pdfUrl = "PDF link is required.";
       return errs;
     },
     onSubmit: async (vals) => {
+      setErrors({});
       setGenericFormError("");
       try {
         await createNotificationMutation.mutateAsync(vals);
@@ -118,7 +119,7 @@ export default function NotificationsPage() {
               />
             </div>
             <div className="flex flex-col">
-              <label htmlFor="pdfUrl" className="text-gray-700 font-medium mb-1 text-sm">PDF Link (Google Drive or other cloud)</label>
+              <label htmlFor="pdfUrl" className="text-gray-700 font-medium mb-1 text-sm">PDF Link (optional)</label>
               <input
                 id="pdfUrl"
                 name="pdfUrl"
@@ -128,7 +129,6 @@ export default function NotificationsPage() {
                 onBlur={handleBlur}
                 placeholder="Paste PDF link here"
                 className={`rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 bg-white text-gray-900 ${errors.pdfUrl && touched.pdfUrl ? 'border-red-400' : ''}`}
-                required
                 aria-invalid={!!errors.pdfUrl}
                 aria-describedby="notif-pdf-error"
               />
@@ -148,7 +148,7 @@ export default function NotificationsPage() {
               />
             </div>
             {genericFormError && <div className="text-red-600 text-sm">{genericFormError}</div>}
-            <FormButton type="submit" className="w-full mt-2" loading={submitting}>Add Notification</FormButton>
+            <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-semibold mt-2 flex items-center justify-center gap-2" disabled={submitting}>{submitting ? (<span className="flex items-center justify-center"><svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Adding...</span>) : "Add Notification"}</button>
           </form>
         )}
         {error ? (
@@ -157,7 +157,7 @@ export default function NotificationsPage() {
           <div className="text-center text-gray-500 py-12">No notifications yet.</div>
         ) : (
           <ul className="flex flex-col gap-4">
-            {notifications.map((n: NotificationItem) => (
+            {notifications.map((n) => (
               <li key={n._id} className="flex flex-col sm:flex-row items-center justify-between bg-indigo-50 rounded-xl p-4 shadow-sm border border-indigo-100">
                 <div className="flex-1 text-center sm:text-left">
                   <span className="text-base sm:text-lg font-medium text-indigo-800">{n.title}</span>
@@ -165,34 +165,52 @@ export default function NotificationsPage() {
                   {n.type && <div className="text-xs text-indigo-600 font-semibold mt-1">{n.type}</div>}
                   {n.message && <div className="text-sm text-gray-700 mt-2 whitespace-pre-line">{n.message}</div>}
                 </div>
-                <div className="flex gap-2 mt-3 sm:mt-0">
-                  <a
-                    href={n.pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white text-indigo-600 hover:bg-indigo-100 focus:bg-indigo-100 border border-indigo-200 shadow transition-colors text-sm font-medium"
-                  >
-                    <HiOutlineExternalLink className="text-lg" /> Preview
-                  </a>
-                  <a
-                    href={n.pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:bg-indigo-700 shadow transition-colors text-sm font-medium"
-                  >
-                    <HiOutlineDocumentDownload className="text-lg" /> Download
-                  </a>
+                <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
+                  {(n.type?.startsWith("mess_bill") || n.messBillId) && (
+                    <Link
+                      href="/mess-bill"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-violet-50 text-violet-700 border border-violet-200 shadow transition-colors text-sm font-medium"
+                    >
+                      View Bills
+                    </Link>
+                  )}
+                  {n.pdfUrl && (
+                    <>
+                      <a
+                        href={n.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white text-indigo-600 hover:bg-indigo-100 border border-indigo-200 shadow transition-colors text-sm font-medium"
+                      >
+                        <HiOutlineExternalLink className="text-lg" /> Preview
+                      </a>
+                      <a
+                        href={n.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow transition-colors text-sm font-medium"
+                      >
+                        <HiOutlineDocumentDownload className="text-lg" /> Download
+                      </a>
+                    </>
+                  )}
                   {user?.role === "admin" && (
-                    <IconButton
+                    <button
                       onClick={() => handleDeleteNotification(n._id)}
                       disabled={deletingNotification === n._id}
-                      className="bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete notification"
-                      loading={deletingNotification === n._id}
                     >
-                      <HiOutlineTrash className="text-lg" />
-                    </IconButton>
+                      {deletingNotification === n._id ? (
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                      ) : (
+                        <HiOutlineTrash className="text-lg" />
+                      )}
+                    </button>
                   )}
                 </div>
               </li>

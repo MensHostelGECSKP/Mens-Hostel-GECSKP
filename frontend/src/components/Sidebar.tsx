@@ -1,8 +1,8 @@
 "use client";
-import { Fragment } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
+import { useEffect, Dispatch, SetStateAction } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
@@ -18,14 +18,40 @@ const navLinks = [
 type SidebarProps = {
   sidebarOpen: boolean;
   setSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  /** Student desktop: slim nav aligned with bottom tabs */
+  studentMode?: boolean;
+  /** Admin desktop: slim nav aligned with bottom tabs */
+  adminMode?: boolean;
 };
 
-export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
+const studentDesktopLinks = [
+  { href: "/dashboard", label: "Home" },
+  { href: "/mess-bill", label: "Mess Bill" },
+  { href: "/notifications", label: "Notifications" },
+  { href: "/profile", label: "Profile" },
+  { href: "/rules", label: "Rules" },
+];
+
+const adminDesktopLinks = [
+  { href: "/dashboard", label: "Home" },
+  { href: "/dashboard/upload-mess-bill", label: "Upload Mess Bill" },
+  { href: "/notifications", label: "Notifications" },
+  { href: "/profile", label: "Profile" },
+  { href: "/dashboard/manage-users", label: "Manage Users" },
+  { href: "/dashboard/create-user", label: "Create User" },
+  { href: "/dashboard/monthly-report", label: "Monthly Report" },
+  { href: "/dashboard/settings", label: "Settings" },
+];
+
+export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = false, adminMode = false }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { isLoggedIn, loading, logout } = useAuth();
 
-  // Removed empty useEffect
+  useEffect(() => {
+    // This effect can be used for other side-effects if needed,
+    // but the mounted state is no longer required for visibility control.
+  }, []);
 
   if (loading) return null; // Simplified loading state check
 
@@ -42,24 +68,32 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
       )}
       {/* Sidebar */}
       <aside
-        className={`fixed top-14 left-0 h-[calc(100vh-56px)] max-h-[calc(100vh-56px)] w-4/5 max-w-xs md:w-56 bg-white border-r border-gray-200 flex flex-col justify-between z-40 transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        className={`fixed top-14 left-0 h-[calc(100vh-56px)] max-h-[calc(100vh-56px)] w-4/5 max-w-xs md:w-56 bg-white border-r border-gray-200 flex flex-col justify-between z-40 transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} ${studentMode || adminMode ? "md:translate-x-0 hidden md:flex" : "md:translate-x-0"}`}
       >
         <div className="flex-1 flex flex-col gap-2 mt-6 px-3 overflow-y-auto">
-          {navLinks.map((link, idx) => {
-            if (link.hideWhenLoggedIn && isLoggedIn) return null;
-            if (link.showWhenLoggedIn && !isLoggedIn) return null;
+          {((studentMode || adminMode) && isLoggedIn
+            ? adminMode
+              ? adminDesktopLinks
+              : studentDesktopLinks
+            : navLinks
+          ).map((link, idx, arr) => {
+            const navLink = link as (typeof navLinks)[number];
+            if (!studentMode && !adminMode) {
+              if (navLink.hideWhenLoggedIn && isLoggedIn) return null;
+              if (navLink.showWhenLoggedIn && !isLoggedIn) return null;
+            }
+            const active = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
             return (
-              <Fragment key={link.href}>
+              <React.Fragment key={link.href}>
               <Link
                 href={link.href}
-                  className={`rounded-lg px-4 py-3 font-medium text-base transition-colors text-gray-700 hover:bg-indigo-100 hover:text-indigo-900 focus:bg-indigo-200 focus:text-indigo-900 active:bg-indigo-200 active:text-indigo-900 flex items-center ${pathname === link.href ? "bg-indigo-50 text-indigo-700 font-semibold border-l-4 border-indigo-400" : ""}`}
+                  className={`rounded-lg px-4 py-3 font-medium text-base transition-colors text-gray-700 hover:bg-[var(--mh-primary-soft)] hover:text-[var(--mh-primary)] flex items-center ${active ? "bg-[var(--mh-primary-soft)] text-[var(--mh-primary)] font-semibold border-l-4 border-[var(--mh-primary)]" : ""}`}
                 onClick={() => setSidebarOpen(false)}
               >
                 {link.label}
               </Link>
-                {/* Divider after each link except last */}
-                {idx < navLinks.length - 1 && <div className="h-px bg-gray-100 my-1 mx-2" />}
-              </Fragment>
+                {idx < arr.length - 1 && <div className="h-px bg-gray-100 my-1 mx-2" />}
+              </React.Fragment>
             );
           })}
         </div>

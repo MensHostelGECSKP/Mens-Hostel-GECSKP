@@ -87,6 +87,9 @@ next-env.d.ts
 /frontend/next-env.d.ts
 /frontend/.tsbuildinfo
 
+# Uploaded mess bill files (local storage)
+/backend/uploads/
+
 # Misc
 *.pem
 

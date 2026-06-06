@@ -1,205 +1,73 @@
 "use client";
-import React, { useState } from "react";
-import { HiOutlineDocumentDownload, HiOutlineExternalLink, HiOutlineTrash } from "react-icons/hi";
-import { useCurrentUser } from "@/context/AuthContext";
-import { monthNames } from "@/constants/months";
-import { useForm } from "@/utils/useForm";
-import { useMessBills, useCreateMessBill, useDeleteMessBill } from "@/hooks/useApi";
-import type { Bill } from '@/types';
-import Spinner from "@/components/Spinner";
-import { FormButton, IconButton } from '@/components/ui';
 
-// Helper for months
-const currentYear = new Date().getFullYear();
-const years = [currentYear, currentYear - 1, currentYear - 2];
-
-
+import React, { useCallback, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import StudentPageWrap from "@/components/student/StudentPageWrap";
+import PullToRefresh from "@/components/student/PullToRefresh";
+import MessBillCard from "@/components/student/mess-bill/MessBillCard";
+import MessBillsSkeleton from "@/components/student/mess-bill/MessBillsSkeleton";
+import { useMessBills } from "@/hooks/useApi";
 
 export default function MessBillPage() {
-  const [deletingBill, setDeletingBill] = useState<string | null>(null);
-  const user = useCurrentUser();
-  const [genericFormError, setGenericFormError] = useState("");
-  
-  // Use React Query hooks
-  const { data: bills = [], isLoading: loading, error } = useMessBills();
-  const createBillMutation = useCreateMessBill();
-  const deleteBillMutation = useDeleteMessBill();
+  const router = useRouter();
+  const { user, isLoggedIn, loading: authLoading } = useAuth();
+  const { data: bills = [], isLoading, error, refetch, isFetching } = useMessBills();
 
-  // useForm for admin bill form
-  const {
-    values,
-    setValues,
-    touched,
-    errors,
-    submitting,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-  } = useForm({
-    initialValues: {
-      month: monthNames[new Date().getMonth()],
-      year: currentYear,
-      previewUrl: "",
-      url: "",
-    },
-    validate: (vals) => {
-      const errs: { [key: string]: string } = {};
-      if (!vals.previewUrl) errs.previewUrl = "Preview link is required.";
-      if (!vals.url) errs.url = "Download link is required.";
-      return errs;
-    },
-    onSubmit: async (vals) => {
-      setGenericFormError("");
-      try {
-        await createBillMutation.mutateAsync(vals);
-        setValues({ month: monthNames[new Date().getMonth()], year: currentYear, previewUrl: "", url: "" });
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setGenericFormError(err.message || "Failed to add bill");
-        } else {
-          setGenericFormError("Failed to add bill");
-        }
-      }
-    },
-  });
-
-  // Delete bill function
-  const handleDeleteBill = async (billId: string) => {
-    if (!confirm("Are you sure you want to delete this mess bill?")) {
-      return;
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      router.replace("/login");
     }
-    
-    setDeletingBill(billId);
-    try {
-      await deleteBillMutation.mutateAsync(billId);
-    } catch (err: unknown) {
-      console.error('Failed to delete bill:', err);
-    } finally {
-      setDeletingBill(null);
+    if (!authLoading && isLoggedIn && user?.role === "admin") {
+      router.replace("/dashboard/upload-mess-bill");
     }
-  };
+  }, [authLoading, isLoggedIn, user?.role, router]);
 
-  // Bills are now fetched automatically by React Query
+  const sortedBills = useMemo(
+    () => [...bills].sort((a, b) => b.year - a.year || b.month - a.month),
+    [bills]
+  );
 
-  if (loading) {
-    return <Spinner className="min-h-screen" />;
-  }
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
-          <p className="text-gray-600">{error.message}</p>
-        </div>
-      </div>
-    );
+  if (authLoading || !isLoggedIn || user?.role === "admin") {
+    return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-2 py-6">
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-4 sm:p-8 border border-gray-100 mt-4">
-        <h1 className="text-xl sm:text-2xl font-semibold text-indigo-700 mb-6 text-center">Monthly Mess Bills</h1>
-        {user?.role === "admin" && (
-          <form onSubmit={handleSubmit} className="mb-8 p-4 rounded-xl bg-white border border-indigo-100 flex flex-col gap-4 shadow-sm">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex flex-col flex-1">
-                <label htmlFor="month" className="text-gray-700 font-medium mb-1 text-sm">Month</label>
-                <select id="month" name="month" value={values.month} onChange={handleChange} onBlur={handleBlur} className="rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 bg-white text-gray-900">
-                  {monthNames.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-              <div className="flex flex-col flex-1">
-                <label htmlFor="year" className="text-gray-700 font-medium mb-1 text-sm">Year</label>
-                <select id="year" name="year" value={values.year} onChange={handleChange} onBlur={handleBlur} className="rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 bg-white text-gray-900">
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="previewUrl" className="text-gray-700 font-medium mb-1 text-sm">Preview Link (Google Drive preview)</label>
-              <input
-                id="previewUrl"
-                type="url"
-                name="previewUrl"
-                value={values.previewUrl}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Paste preview link here"
-                className={`rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 bg-white text-gray-900 ${errors.previewUrl && touched.previewUrl ? 'border-red-400' : ''}`}
-                required
-                aria-invalid={!!errors.previewUrl}
-                aria-describedby="bill-preview-error"
-              />
-              {errors.previewUrl && touched.previewUrl && <div id="bill-preview-error" className="text-red-500 text-xs mt-1">{errors.previewUrl}</div>}
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="url" className="text-gray-700 font-medium mb-1 text-sm">Download Link (Google Drive direct)</label>
-              <input
-                id="url"
-                type="url"
-                name="url"
-                value={values.url}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Paste download link here"
-                className={`rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 bg-white text-gray-900 ${errors.url && touched.url ? 'border-red-400' : ''}`}
-                required
-                aria-invalid={!!errors.url}
-                aria-describedby="bill-url-error"
-              />
-              {errors.url && touched.url && <div id="bill-url-error" className="text-red-500 text-xs mt-1">{errors.url}</div>}
-            </div>
-            {genericFormError && <div className="text-red-600 text-sm">{genericFormError}</div>}
-            <FormButton type="submit" className="w-full mt-2" loading={submitting}>Add Bill</FormButton>
-          </form>
-        )}
-        {error ? (
-          <div className="text-center text-red-600 py-12">{error}</div>
-        ) : bills.length === 0 ? (
-          <div className="text-center text-gray-500 py-12">No mess bills available yet.</div>
+    <StudentPageWrap title="Bills">
+      <PullToRefresh onRefresh={handleRefresh} disabled={isFetching}>
+        {isLoading ? (
+          <MessBillsSkeleton />
+        ) : error ? (
+          <div className="rounded-2xl bg-white p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+            <p className="text-sm font-medium text-red-600">
+              {error.message || "Could not load bills"}
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="mt-3 text-sm font-semibold text-[var(--mh-primary)]"
+            >
+              Try again
+            </button>
+          </div>
+        ) : sortedBills.length === 0 ? (
+          <div className="rounded-2xl bg-white p-8 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+            <p className="text-sm text-gray-500">No mess bills published yet.</p>
+          </div>
         ) : (
           <ul className="flex flex-col gap-4">
-            {bills.map((bill: Bill) => (
-              <li key={bill._id} className="flex flex-col sm:flex-row items-center justify-between bg-indigo-50 rounded-xl p-4 shadow-sm border border-indigo-100">
-                <div className="flex-1 text-center sm:text-left">
-                  <span className="text-base sm:text-lg font-medium text-indigo-800">{bill.month} {bill.year}</span>
-                </div>
-                <div className="flex gap-2 mt-3 sm:mt-0">
-                  <a
-                    href={bill.previewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-white text-indigo-600 hover:bg-indigo-100 focus:bg-indigo-100 border border-indigo-200 shadow transition-colors text-sm font-medium"
-                  >
-                    <HiOutlineExternalLink className="text-lg" /> Preview
-                  </a>
-                  <a
-                    href={bill.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:bg-indigo-700 shadow transition-colors text-sm font-medium"
-                  >
-                    <HiOutlineDocumentDownload className="text-lg" /> Download
-                  </a>
-                  {user?.role === "admin" && (
-                    <IconButton
-                      onClick={() => handleDeleteBill(bill._id)}
-                      disabled={deletingBill === bill._id}
-                      className="bg-red-600 text-white hover:bg-red-700 focus:bg-red-700 shadow transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg"
-                      title="Delete bill"
-                      loading={deletingBill === bill._id}
-                    >
-                      <HiOutlineTrash className="text-lg" />
-                    </IconButton>
-                  )}
-                </div>
+            {sortedBills.map((bill) => (
+              <li key={bill._id}>
+                <MessBillCard bill={bill} />
               </li>
             ))}
           </ul>
         )}
-      </div>
-    </div>
+      </PullToRefresh>
+    </StudentPageWrap>
   );
-} 
+}

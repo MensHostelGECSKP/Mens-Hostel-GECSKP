@@ -1,77 +1,108 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const XLSX = require('xlsx');
-const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const path = require('path');
 
-// Adjust the path to your User model as needed
 const User = require(path.join(__dirname, '../src/models/User'));
 
-// 1. Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI);
 
-// 2. Setup nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or your SMTP provider
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-// 3. Helper to generate strong password
 function generatePassword(length = 12) {
-  return [...Array(length)].map(() => (Math.random()*36|0).toString(36)).join('');
+  return [...Array(length)].map(() => (Math.random() * 36 | 0).toString(36)).join('');
 }
 
-// 4. Main function
+/** Read first matching column from a spreadsheet row (case-insensitive keys). */
+function pickField(row, aliases) {
+  const keys = Object.keys(row);
+  for (const alias of aliases) {
+    const found = keys.find((k) => k.trim().toLowerCase() === alias.toLowerCase());
+    if (found != null && String(row[found]).trim() !== '') {
+      return String(row[found]).trim();
+    }
+  }
+  return '';
+}
+
+function parseStudentRow(row) {
+  const name = pickField(row, ['name', 'full name', 'student name']);
+  const email = pickField(row, ['email', 'e-mail']);
+  const yearOfStudy = pickField(row, ['year of study', 'year', 'yearofstudy']);
+  const roomNumber = pickField(row, ['room', 'room no', 'room number', 'roomnumber']);
+
+  const missing = [];
+  if (!name) missing.push('name');
+  if (!email) missing.push('email');
+  if (!yearOfStudy) missing.push('year of study');
+  if (!roomNumber) missing.push('room');
+
+  return { name, email, yearOfStudy, roomNumber, missing };
+}
+
 async function importUsersFromExcel(filePath) {
   const workbook = XLSX.readFile(filePath);
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(sheet);
 
-  let created = 0, skipped = 0, errors = [];
+  let created = 0;
+  let skipped = 0;
+  const errors = [];
 
   for (const row of rows) {
-    // Handle name construction
-    // let baseName = '';
-    // if (row.name) {
-    //   baseName = row.name.replace(/\s+/g, '_');
-    // } else if (row['first name']) {
-    //   const firstName = (row['first name'] || '').trim();
-    //   const lastName = (row['last name'] || '').trim();
-    //   baseName = firstName;
-    //   if (lastName) {
-    //     baseName += `_${lastName}`;
-    //   }
-    //   baseName = baseName.replace(/\s+/g, '_');
-    // } else {
-    //   baseName = 'unknown';
-    // }
-    // const name= `${baseName}_${row['year of study']}`;
-    const name = `${row.name.replace(/\s+/g, '_')}_${row['year of study']}`;
-    const email = row.email;
-    const password = generatePassword().trim();
-    // Create user with plain password - pre-save hook will hash it
-    const user = new User({ name, email, password, role: 'student' });
+    const parsed = parseStudentRow(row);
+    if (parsed.missing.length > 0) {
+      errors.push({
+        email: parsed.email || '(unknown)',
+        error: `Missing required field(s): ${parsed.missing.join(', ')}`,
+      });
+      continue;
+    }
 
-    // Check for existing user
-    const exists = await User.findOne({ email });
+    const { name, email, yearOfStudy, roomNumber } = parsed;
+    const password = generatePassword().trim();
+
+    const exists = await User.findOne({ email: email.toLowerCase() });
     if (exists) {
       skipped++;
       continue;
     }
 
+    const user = new User({
+      name,
+      email: email.toLowerCase(),
+      password,
+      role: 'student',
+      yearOfStudy,
+      roomNumber,
+    });
+
     try {
       await user.save();
 
-      // Send email
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'Your Hostel Mess App Account',
-        text: `Hello ${name},\n\nYour mess account has been created.\nUsername: ${name}\nEmail: ${email}\nPassword: ${password}\n\nPlease log in at https://mens-hostel-gecskp.vercel.app/ using the above credentials.\n`,
+        text: [
+          `Hello ${name},`,
+          '',
+          'Your mess account has been created.',
+          `Name: ${name}`,
+          `Year: ${yearOfStudy}`,
+          `Room: ${roomNumber}`,
+          `Email: ${email}`,
+          `Password: ${password}`,
+          '',
+          'Please log in at https://mens-hostel-gecskp.vercel.app/ using the above credentials.',
+        ].join('\n'),
       });
 
       created++;
@@ -86,10 +117,10 @@ async function importUsersFromExcel(filePath) {
   mongoose.disconnect();
 }
 
-// 5. Run the script
 const filePath = process.argv[2];
 if (!filePath) {
   console.error('Usage: node scripts/bulkUserImport.js <path-to-excel-file>');
+  console.error('Required columns: name, email, year of study, room (or room no)');
   process.exit(1);
 }
-importUsersFromExcel(filePath); 
+importUsersFromExcel(filePath);

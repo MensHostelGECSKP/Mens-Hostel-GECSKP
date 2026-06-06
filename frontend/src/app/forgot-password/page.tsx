@@ -5,6 +5,7 @@ import Link from "next/link";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useForm } from "@/utils/useForm";
+
 import Spinner from '@/components/Spinner';
 
 export default function ForgotPasswordPage() {
@@ -81,11 +82,11 @@ export default function ForgotPasswordPage() {
               {submitting ? (<><Spinner className="h-5 w-5 mr-2 text-white" />Sending...</>) : "Send Reset Link"}
             </button>
           </form>
-          <div className="mt-6 text-center">
-            <Link href="/login" className="text-indigo-600 hover:underline">
-              &larr; Back to Login
-            </Link>
-          </div>
+        </div>
+        <div className="mt-6 text-center">
+          <Link href="/login" className="text-indigo-600 hover:underline">
+            &larr; Back to Login
+          </Link>
         </div>
       </div>
     </div>

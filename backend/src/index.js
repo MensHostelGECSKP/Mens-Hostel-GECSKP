@@ -5,16 +5,16 @@ const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
 const helmet = require('helmet');
-const csrf = require('csurf');
 const cookieParser = require('cookie-parser');
-require('dotenv').config();
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
-
-//console.log('MONGODB_URI:', process.env.MONGODB_URI);
+const config = require('./config');
+const { setCsrfToken, getCsrfToken } = require('./middleware/csrf');
+const { errorHandler } = require('./middleware/errorHandler');
+const { sanitizeBody } = require('./utils/sanitize');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 
 // Trust proxy for rate limiting (needed for Render deployment)
 app.set('trust proxy', 1);
@@ -38,16 +38,10 @@ app.use(compression());
 // Cookie parser middleware
 app.use(cookieParser());
 
-// CSRF protection (only for state-changing operations)
-const csrfProtection = csrf({
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  }
-});
+// Set CSRF token cookie for all requests
+app.use(setCsrfToken);
 
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+const allowedOrigins = config.frontendUrl
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
@@ -62,7 +56,7 @@ const corsOptions = {
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true, // Enable cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 };
 
@@ -72,15 +66,19 @@ app.use(cors(corsOptions));
 // Handle preflight OPTIONS requests for all routes with the same options
 app.options('*', cors(corsOptions));
 
-app.use(express.json()); // Parse JSON bodies
+// Parse JSON bodies with size limit
+app.use(express.json({ limit: config.jsonBodyLimit }));
+
+// Sanitize request bodies
+app.use(sanitizeBody);
 
 // Rate limiting middleware
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: config.rateLimitWindowMs,
+  max: config.rateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
-  message: 'Too many requests from this IP, please try again after 15 minutes',
+  message: 'Too many requests from this IP, please try again later',
 });
 
 // Apply to all API requests
@@ -92,8 +90,9 @@ app.get('/', (req, res) => {
 });
 
 // CSRF token endpoint (GET only, no CSRF protection needed)
-app.get('/api/csrf-token', csrfProtection, (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
+app.get('/api/csrf-token', (req, res) => {
+  const token = getCsrfToken(req, res);
+  res.json({ csrfToken: token });
 });
 
 // Auth routes
@@ -108,11 +107,21 @@ app.use('/api/mess-bill', require('./routes/messBill'));
 // Notifications routes
 app.use('/api/notifications', require('./routes/notification'));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+// System management (admin)
+app.use('/api/system', require('./routes/system'));
 
+// Global error handler (must be last middleware)
+app.use(errorHandler);
+
+// Connect to MongoDB
+mongoose.connect(config.mongodbUri, {
+  // Add connection options for better reliability
 })
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => {
+    console.log('Connected to MongoDB');
+    const { startMessBillReminderJob } = require('./jobs/messBillReminders');
+    startMessBillReminderJob();
+  })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
@@ -121,12 +130,10 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
-
-// Global error handler for CORS errors
-app.use(function(err, req, res, next) {
-  if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({ message: 'CORS error: Not allowed by CORS' });
+  console.log(`[config] Mess bill storage: local (${config.messBillStorageDir})`);
+  if (!config.emailUser || !config.emailPass) {
+    console.warn(
+      '[config] EMAIL_USER / EMAIL_PASS are not set — forgot-password will save reset tokens but cannot send email.'
+    );
   }
-  next(err);
 });

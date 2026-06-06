@@ -1,8 +1,63 @@
-// Shared application types used across the frontend
+export type UserStatus = 'active' | 'inactive' | 'blocked';
 
-export type AttendanceItem = { date: string; meals: { morning: boolean; noon: boolean; night: boolean } };
-export type UserData = { _id?: string; name: string; email: string; role: string; userId?: string };
-export type Bill = { _id: string; month: string; year: number; previewUrl: string; url: string };
-export type NotificationItem = { _id: string; title: string; message?: string; pdfUrl: string; type?: string; createdAt: string };
-export type SummaryDetail = { name: string; morning?: boolean; noon?: boolean; night?: boolean; morningAbsent?: boolean; noonAbsent?: boolean; nightAbsent?: boolean };
-export type AttendanceSummary = { summary: { morning: number; noon: number; night: number }; details?: SummaryDetail[] };
+export type User = {
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+  yearOfStudy?: string;
+  roomNumber?: string;
+  status?: UserStatus;
+};
+
+export type AttendanceRecord = {
+  date: string;
+  meals: { morning: boolean; noon: boolean; night: boolean };
+};
+
+export type AttendanceSummaryDetail = {
+  name: string;
+  email?: string;
+  morning?: boolean;
+  noon?: boolean;
+  night?: boolean;
+  morningAbsent?: boolean;
+  noonAbsent?: boolean;
+  nightAbsent?: boolean;
+};
+
+export type AttendanceSummary = {
+  date?: string;
+  summary: { morning: number; noon: number; night: number };
+  details: AttendanceSummaryDetail[];
+};
+
+export type MessBillPaymentStatus = {
+  isPaid: boolean;
+  paidAt: string | null;
+};
+
+export type MessBill = {
+  _id: string;
+  month: number;
+  year: number;
+  dueDate: string;
+  fileName: string;
+  fileUrl: string;
+  downloadUrl: string;
+  mimeType?: string;
+  uploadedAt?: string;
+  isPublished?: boolean;
+  paymentStatus?: MessBillPaymentStatus | null;
+};
+
+export type Notification = {
+  _id: string;
+  title: string;
+  message?: string;
+  pdfUrl?: string;
+  type?: string;
+  messBillId?: string;
+  userId?: string | null;
+  createdAt: string;
+};
