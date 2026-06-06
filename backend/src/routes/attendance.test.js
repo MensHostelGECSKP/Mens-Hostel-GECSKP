@@ -33,10 +33,11 @@ describe('Attendance API', () => {
         { date: '2024-01-11', meals: { morning: false, noon: true, night: true } },
       ];
       
-      Attendance.find.mockResolvedValue(mockAttendanceData);
+      const mockSelect = jest.fn().mockResolvedValue(mockAttendanceData);
+      Attendance.find.mockReturnValue({ select: mockSelect });
 
       const response = await request(app)
-        .get('/api/attendance/month?userId=mock-user-id&month=2024-01');
+        .get('/api/attendance/month?month=2024-01');
         
       expect(response.status).toBe(200);
       expect(response.body.attendance).toEqual(mockAttendanceData);
@@ -44,12 +45,13 @@ describe('Attendance API', () => {
         userId: 'mock-user-id',
         date: { $regex: new RegExp(`^2024-01-\\d{2}$`) },
       });
+      expect(mockSelect).toHaveBeenCalledWith('date meals -_id');
     });
 
-    it('should return 400 if userId or month is missing', async () => {
+    it('should return 400 if month is missing or invalid', async () => {
       const response = await request(app).get('/api/attendance/month');
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Missing required fields');
+      expect(response.body.error).toBe('Validation error');
     });
   });
 

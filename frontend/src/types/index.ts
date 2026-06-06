@@ -18,6 +18,8 @@ export type AttendanceRecord = {
 export type AttendanceSummaryDetail = {
   name: string;
   email?: string;
+  roomNumber?: string;
+  yearOfStudy?: string;
   morning?: boolean;
   noon?: boolean;
   night?: boolean;
@@ -30,6 +32,7 @@ export type AttendanceSummary = {
   date?: string;
   summary: { morning: number; noon: number; night: number };
   details: AttendanceSummaryDetail[];
+  hasRecords?: boolean;
 };
 
 export type MessBillPaymentStatus = {

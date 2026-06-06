@@ -77,7 +77,7 @@ async function getMonthAttendance(userId, month) {
  */
 async function getAdminSummary(date) {
   // Get all users (students only)
-  const users = await User.find({ role: 'student' }).select('name email');
+  const users = await User.find({ role: 'student' }).select('name email roomNumber yearOfStudy');
   // Get all attendance records for the date
   const attendanceRecords = await Attendance.find({ date });
   // Map userId to attendance
@@ -97,6 +97,8 @@ async function getAdminSummary(date) {
     return {
       name: user.name,
       email: user.email,
+      roomNumber: user.roomNumber || '',
+      yearOfStudy: user.yearOfStudy || '',
       morning: morningAbsent,
       noon: noonAbsent,
       night: nightAbsent,
@@ -106,7 +108,7 @@ async function getAdminSummary(date) {
     };
   });
   
-  return { date, summary, details };
+  return { date, summary, details, hasRecords: attendanceRecords.length > 0 };
 }
 
 /**

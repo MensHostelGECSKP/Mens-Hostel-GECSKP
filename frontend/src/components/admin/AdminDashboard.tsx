@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import type jsPDF from "jspdf";
+import toast from "react-hot-toast";
 import AdminOverviewCard from "@/components/admin/AdminOverviewCard";
 import AdminActionGrid from "@/components/admin/AdminActionGrid";
 import AdminAttendanceSummary from "@/components/admin/AdminAttendanceSummary";
@@ -15,6 +16,38 @@ import {
   useUsers,
 } from "@/hooks/useApi";
 import type { AttendanceSummaryDetail } from "@/types";
+
+function isAbsent(d: AttendanceSummaryDetail, meal: "morning" | "noon" | "night") {
+  const absentKey = `${meal}Absent` as const;
+  const val = d[absentKey];
+  if (typeof val === "boolean") return val;
+  return !!d[meal];
+}
+
+function formatDateLong(dateStr: string) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatDateTimeLong(date: Date) {
+  const datePart = date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const timePart = date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${datePart} ${timePart}`;
+}
 
 function formatTodayLabel() {
   const now = new Date();
@@ -108,63 +141,223 @@ export default function AdminDashboard() {
       import("jspdf"),
       import("jspdf-autotable")
     ]);
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Mess Cut Summary", 14, 18);
-    doc.setFontSize(12);
-    doc.text(`Date: ${fetchDate}`, 14, 30);
-    doc.text(`Morning: ${attendanceSummary.summary.morning}`, 14, 40);
-    doc.text(`Noon: ${attendanceSummary.summary.noon}`, 14, 50);
-    doc.text(`Night: ${attendanceSummary.summary.night}`, 14, 60);
 
-    if (attendanceSummary.details?.length) {
-      const columns = [
-        { header: "Sl No", dataKey: "slno" },
-        { header: "Name", dataKey: "name" },
-        { header: "Morning", dataKey: "morning" },
-        { header: "Noon", dataKey: "noon" },
-        { header: "Night", dataKey: "night" },
-      ];
-      const rows = attendanceSummary.details.map((d: AttendanceSummaryDetail, i: number) => {
-        const morningAbsent =
-          typeof d.morningAbsent === "boolean" ? d.morningAbsent : !!d.morning;
-        const noonAbsent = typeof d.noonAbsent === "boolean" ? d.noonAbsent : !!d.noon;
-        const nightAbsent = typeof d.nightAbsent === "boolean" ? d.nightAbsent : !!d.night;
-        return {
-          slno: i + 1,
-          name: d.name,
-          morning: morningAbsent
-            ? { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } }
-            : { text: "Yes", styles: { textColor: [34, 197, 94] as [number, number, number] } },
-          noon: noonAbsent
-            ? { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } }
-            : { text: "Yes", styles: { textColor: [34, 197, 94] as [number, number, number] } },
-          night: nightAbsent
-            ? { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } }
-            : { text: "Yes", styles: { textColor: [34, 197, 94] as [number, number, number] } },
-        };
-      });
-      autoTable(doc, {
-        startY: 70,
-        columns,
-        body: rows,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [99, 102, 241] },
-        didParseCell(data) {
-          const raw = data.cell.raw as unknown;
-          if (raw && typeof raw === "object" && "styles" in raw && "text" in raw) {
-            const typedRaw = raw as {
-              styles: { textColor: [number, number, number] };
-              text: string;
-            };
-            data.cell.styles.textColor = typedRaw.styles.textColor;
-            data.cell.text = [typedRaw.text];
-          }
-        },
-      });
+    const absentDetails = (attendanceSummary.details || []).filter(
+      (d: AttendanceSummaryDetail) =>
+        isAbsent(d, "morning") || isAbsent(d, "noon") || isAbsent(d, "night")
+    );
+
+    if (!absentDetails.length) {
+      toast.error("No mess cuts found to export for this date.");
+      return;
     }
 
-    handlePDFExport(doc, "Mess_Cut_Summary");
+    // Sort by Room Number first naturally, then Name
+    const sortedAbsentDetails = [...absentDetails].sort((a, b) => {
+      const roomA = a.roomNumber || "";
+      const roomB = b.roomNumber || "";
+      const roomCompare = roomA.localeCompare(roomB, undefined, { numeric: true, sensitivity: 'base' });
+      if (roomCompare !== 0) return roomCompare;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const totalResidents = attendanceSummary.details?.length || 0;
+    const morningCuts = attendanceSummary.summary.morning || 0;
+    const noonCuts = attendanceSummary.summary.noon || 0;
+    const nightCuts = attendanceSummary.summary.night || 0;
+
+    const morningPresent = Math.max(0, totalResidents - morningCuts);
+    const noonPresent = Math.max(0, totalResidents - noonCuts);
+    const nightPresent = Math.max(0, totalResidents - nightCuts);
+
+    const formattedSelectedDate = formatDateLong(fetchDate);
+    const now = new Date();
+    const generatedDateTimeStr = formatDateTimeLong(now);
+
+    const totalPagesExp = "{total_pages_count_string}";
+
+    // Draw header elements on first page
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text("MH App", 15, 12);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(79, 70, 229); // Primary Indigo color
+    doc.text("MESS CUT SUMMARY REPORT", 15, 20);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.5);
+    doc.line(15, 24, 195, 24);
+
+    // Selected Date & Generated date
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Date: ${formattedSelectedDate}`, 15, 30);
+    doc.text(`Generated: ${generatedDateTimeStr}`, 195, 30, { align: "right" });
+
+    // Summary Card Box on Page 1
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(241, 245, 249);
+    doc.roundedRect(15, 36, 180, 24, 2, 2, "FD");
+
+    // Print horizontal columns for summary statistics
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL RESIDENTS", 20, 42);
+    doc.text("MORNING PRESENT", 65, 42);
+    doc.text("NOON PRESENT", 110, 42);
+    doc.text("NIGHT PRESENT", 155, 42);
+
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${totalResidents}`, 20, 50);
+
+    // Eating vs Cuts
+    doc.text(`${morningPresent}`, 65, 50);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(239, 68, 68);
+    doc.text(` (${morningCuts} cuts)`, 72, 50);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`${noonPresent}`, 110, 50);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(239, 68, 68);
+    doc.text(` (${noonCuts} cuts)`, 118, 50);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`${nightPresent}`, 155, 50);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(239, 68, 68);
+    doc.text(` (${nightCuts} cuts)`, 163, 50);
+
+    // Define table data
+    const columns = [
+      { header: "Sl No", dataKey: "slno" },
+      { header: "Name", dataKey: "name" },
+      { header: "Room Number", dataKey: "room" },
+      { header: "Year", dataKey: "year" },
+      { header: "Morning", dataKey: "morning" },
+      { header: "Noon", dataKey: "noon" },
+      { header: "Night", dataKey: "night" },
+    ];
+
+    const rows = sortedAbsentDetails.map((d: AttendanceSummaryDetail, i: number) => {
+      const morningAbsent = isAbsent(d, "morning");
+      const noonAbsent = isAbsent(d, "noon");
+      const nightAbsent = isAbsent(d, "night");
+      return {
+        slno: i + 1,
+        name: d.name,
+        room: d.roomNumber || "—",
+        year: d.yearOfStudy || "—",
+        morning: morningAbsent
+          ? { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } }
+          : { text: "Yes", styles: { textColor: [22, 163, 74] as [number, number, number] } },
+        noon: noonAbsent
+          ? { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } }
+          : { text: "Yes", styles: { textColor: [22, 163, 74] as [number, number, number] } },
+        night: nightAbsent
+          ? { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } }
+          : { text: "Yes", styles: { textColor: [22, 163, 74] as [number, number, number] } },
+      };
+    });
+
+    autoTable(doc, {
+      startY: 68,
+      columns,
+      body: rows,
+      margin: { top: 25, right: 15, bottom: 22, left: 15 },
+      styles: {
+        fontSize: 9,
+        cellPadding: 2.5,
+        valign: "middle",
+      },
+      headStyles: {
+        fillColor: [79, 70, 229],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        halign: "center",
+      },
+      columnStyles: {
+        slno: { halign: "center", cellWidth: 15 },
+        name: { halign: "left", fontStyle: "bold", cellWidth: 65 },
+        room: { halign: "center", cellWidth: 25 },
+        year: { halign: "center", cellWidth: 15 },
+        morning: { halign: "center", cellWidth: 20 },
+        noon: { halign: "center", cellWidth: 20 },
+        night: { halign: "center", cellWidth: 20 },
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+      didParseCell(data) {
+        const raw = data.cell.raw as unknown;
+        if (raw && typeof raw === "object" && "styles" in raw && "text" in raw) {
+          const typedRaw = raw as {
+            styles: { textColor: [number, number, number] };
+            text: string;
+          };
+          data.cell.styles.textColor = typedRaw.styles.textColor;
+          data.cell.styles.fontStyle = "bold";
+          data.cell.text = [typedRaw.text];
+        }
+      },
+      didDrawPage(data) {
+        const pageHeight = doc.internal.pageSize.height;
+        const pageWidth = doc.internal.pageSize.width;
+
+        // Draw running header on later pages
+        if (data.pageNumber > 1) {
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(148, 163, 184);
+          doc.text("Mess Cut Summary Report", 15, 12);
+          doc.text(`Date: ${formattedSelectedDate}`, pageWidth - 15, 12, { align: "right" });
+          doc.setDrawColor(241, 245, 249);
+          doc.setLineWidth(0.5);
+          doc.line(15, 15, pageWidth - 15, 15);
+        }
+
+        // Draw Footer on all pages
+        doc.setDrawColor(241, 245, 249);
+        doc.setLineWidth(0.5);
+        doc.line(15, pageHeight - 18, pageWidth - 15, pageHeight - 18);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Generated by MH App v2.0.1", 15, pageHeight - 12);
+        doc.text(`Generated: ${generatedDateTimeStr}`, 15, pageHeight - 7);
+
+        // Page Number
+        const pageNumberStr = `Page ${data.pageNumber} of ${totalPagesExp}`;
+        doc.text(pageNumberStr, pageWidth - 15, pageHeight - 12, { align: "right" });
+      },
+    });
+
+    if (typeof doc.putTotalPages === "function") {
+      doc.putTotalPages(totalPagesExp);
+    }
+
+    handlePDFExport(doc, `Mess_Cut_Summary_${fetchDate}`);
   };
 
   const handleNewUser = () => {
@@ -231,6 +424,7 @@ export default function AdminDashboard() {
             details={hasFetched ? attendanceSummary?.details : undefined}
             onExportPdf={exportSummaryToPDF}
             hasFetched={hasFetched}
+            hasRecords={hasFetched ? (attendanceSummary?.hasRecords !== false) : false}
           />
         </div>
 
