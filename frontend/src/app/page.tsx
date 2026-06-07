@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { appConfig } from "@/constants/appConfig";
 import {
   HiEnvelope,
   HiPhone,
@@ -340,9 +341,8 @@ export default function Home() {
         <footer className="mt-12 text-center select-none pt-4 border-t border-gray-250">
           <div className="text-xs text-gray-500">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-600 via-indigo-600 to-pink-500 font-semibold">Made by </span>
-            <span className="text-black font-semibold">Sabari</span>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-600 via-indigo-600 to-pink-500 font-semibold"> &amp; </span>
-            <span className="text-black font-semibold">Roomies 2.0</span>
+            <span className="text-black font-semibold">{appConfig.developedBy}</span>
+            <span className="text-gray-400 font-medium ml-2">v{appConfig.version}</span>
           </div>
         </footer>
       </motion.div>

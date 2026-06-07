@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import type { User } from "@/types";
-import { HiBuildingOffice2, HiEnvelope, HiUser, HiAcademicCap, HiArrowRightOnRectangle } from "react-icons/hi2";
+import { HiBuildingOffice2, HiEnvelope, HiUser, HiAcademicCap, HiArrowRightOnRectangle, HiInformationCircle } from "react-icons/hi2";
 import ProfileInfoRow from "./ProfileInfoRow";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -60,10 +61,18 @@ export default function StudentProfile({ user }: { user: User }) {
         />
       </div>
 
+      <Link
+        href="/about"
+        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-gray-100 bg-white text-sm font-semibold text-gray-700 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-gray-50"
+      >
+        <HiInformationCircle className="h-5 w-5 text-gray-400" aria-hidden />
+        About MH App
+      </Link>
+
       <button
         type="button"
         onClick={() => setShowLogoutConfirm(true)}
-        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-red-50 disabled:opacity-60"
+        className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-red-50 disabled:opacity-60"
       >
         <HiArrowRightOnRectangle className="h-5 w-5" aria-hidden />
         Log out

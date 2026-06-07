@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { appConfig } from "../../constants/appConfig";
 
 type AdminDrawerProps = {
   open: boolean;
@@ -15,6 +16,7 @@ const links = [
   { href: "/dashboard/monthly-report", label: "Monthly Report" },
   { href: "/profile", label: "Profile" },
   { href: "/rules", label: "Rules" },
+  { href: "/about", label: "About MH App" },
   { href: "/", label: "Public Home" },
 ];
 
@@ -76,8 +78,8 @@ export default function AdminDrawer({ open, onClose }: AdminDrawerProps) {
             Logout
           </button>
           <div className="w-full text-xs leading-normal text-center px-2 select-none pt-1 text-gray-400 font-medium">
-            <div>Made by Sabari &amp; Roomies</div>
-            <div className="text-[10px] opacity-75">MH App v2.0.1</div>
+            <div>Made by {appConfig.developedBy}</div>
+            <div className="text-[10px] opacity-75">{appConfig.name} v{appConfig.version}</div>
           </div>
         </div>
       </aside>

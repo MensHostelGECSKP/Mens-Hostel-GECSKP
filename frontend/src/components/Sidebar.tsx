@@ -15,8 +15,10 @@ import {
   HiUsers,
   HiCog6Tooth,
   HiArrowLeftOnRectangle,
+  HiInformationCircle,
 } from "react-icons/hi2";
 import { MdRestaurant } from "react-icons/md";
+import { appConfig } from "../constants/appConfig";
 
 const navLinks = [
   { href: "/", label: "Home", icon: HiHome },
@@ -25,6 +27,7 @@ const navLinks = [
   { href: "/mess-bill", label: "Mess Bill", icon: HiDocumentText },
   { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
   { href: "/notifications", label: "Notifications", icon: HiBell },
+  { href: "/about", label: "About MH App", icon: HiInformationCircle },
 ];
 
 type SidebarProps = {
@@ -43,6 +46,7 @@ const studentDesktopLinks = [
   { href: "/notifications", label: "Notifications", icon: HiBell },
   { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
   { href: "/profile", label: "Profile", icon: HiUser },
+  { href: "/about", label: "About", icon: HiInformationCircle },
 ];
 
 const adminDesktopLinks = [
@@ -55,6 +59,7 @@ const adminDesktopLinks = [
   { href: "/dashboard/create-user", label: "Create User", icon: HiUserPlus },
   { href: "/dashboard/monthly-report", label: "Monthly Report", icon: HiDocumentText },
   { href: "/dashboard/audit-logs", label: "Audit Logs", icon: HiClipboardDocumentList },
+  { href: "/about", label: "About", icon: HiInformationCircle },
 ];
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = false, adminMode = false }: SidebarProps) {
@@ -130,8 +135,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, studentMode = fal
             </button>
           )}
           <div className="w-full text-xs leading-normal text-center px-2 select-none pt-1 text-gray-400 font-medium">
-            <div>Made by Sabari &amp; Roomies</div>
-            <div className="text-[10px] opacity-75">MH App v2.0.1</div>
+            <div>Made by {appConfig.developedBy}</div>
+            <div className="text-[10px] opacity-75">{appConfig.name} v{appConfig.version}</div>
           </div>
         </div>
       </aside>

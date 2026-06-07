@@ -10,7 +10,9 @@ import {
   HiClipboardDocumentList,
   HiArrowRightOnRectangle,
   HiDocumentText,
+  HiInformationCircle,
 } from "react-icons/hi2";
+import { appConfig } from "../../constants/appConfig";
 import { MdRestaurant } from "react-icons/md";
 
 type StudentDrawerProps = {
@@ -25,6 +27,7 @@ const links = [
   { href: "/notifications", label: "Notifications", icon: HiBell },
   { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
   { href: "/profile", label: "Profile", icon: HiUser },
+  { href: "/about", label: "About", icon: HiInformationCircle },
 ];
 
 export default function StudentDrawer({ open, onClose }: StudentDrawerProps) {
@@ -96,8 +99,8 @@ export default function StudentDrawer({ open, onClose }: StudentDrawerProps) {
             <span>Logout</span>
           </button>
           <div className="w-full text-xs leading-normal text-center px-2 select-none pt-1 text-gray-400 font-medium">
-            <div>Made by Sabari &amp; Roomies</div>
-            <div className="text-[10px] opacity-75">MH App v2.0.1</div>
+            <div>Made by {appConfig.developedBy}</div>
+            <div className="text-[10px] opacity-75">{appConfig.name} v{appConfig.version}</div>
           </div>
         </div>
       </aside>

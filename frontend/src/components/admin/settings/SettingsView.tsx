@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { HiChevronRight, HiCog6Tooth, HiExclamationTriangle } from "react-icons/hi2";
+import { HiChevronRight, HiCog6Tooth, HiExclamationTriangle, HiInformationCircle } from "react-icons/hi2";
 import { AppHeader, PageContainer } from "@/components/ui";
 
 const systemLinks = [
@@ -71,6 +71,36 @@ export default function SettingsView() {
               </Link>
             </li>
           ))}
+        </ul>
+      </section>
+
+      <section className="px-4 pb-8 md:px-0 mt-6" aria-labelledby="app-info-heading">
+        <h2
+          id="app-info-heading"
+          className="mb-2.5 flex items-center gap-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400"
+        >
+          <HiInformationCircle className="h-4 w-4" aria-hidden />
+          Application Information
+        </h2>
+        <ul className="flex flex-col gap-2">
+          <li>
+            <Link
+              href="/about"
+              className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-white transition active:scale-[0.99] hover:shadow-[0_4px_16px_rgba(0,0,0,0.07)]"
+            >
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50"
+                aria-hidden
+              >
+                <HiInformationCircle className="h-5 w-5 text-blue-600" />
+              </span>
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block text-sm font-semibold text-gray-900">About MH App</span>
+                <span className="block text-xs text-gray-500">View app version, features, and release history</span>
+              </span>
+              <HiChevronRight className="h-5 w-5 shrink-0 text-gray-300" aria-hidden />
+            </Link>
+          </li>
         </ul>
       </section>
     </PageContainer>

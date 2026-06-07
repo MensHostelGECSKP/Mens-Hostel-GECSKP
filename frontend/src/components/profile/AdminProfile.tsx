@@ -17,6 +17,7 @@ import {
   HiChevronRight,
   HiHome,
   HiCog6Tooth,
+  HiInformationCircle,
 } from "react-icons/hi2";
 import ProfileInfoRow from "./ProfileInfoRow";
 
@@ -52,6 +53,14 @@ const quickLinks = [
     icon: HiCog6Tooth,
     iconBg: "bg-slate-50",
     iconColor: "text-slate-600",
+  },
+  {
+    href: "/about",
+    label: "About MH App",
+    description: "App info, changelogs, & features",
+    icon: HiInformationCircle,
+    iconBg: "bg-blue-50",
+    iconColor: "text-blue-600",
   },
 ] as const;
 
