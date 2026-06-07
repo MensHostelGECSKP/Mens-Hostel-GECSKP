@@ -11,7 +11,84 @@
   --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   /* Mobile bottom tab bar — keep sheets/cards flush above it */
   --mh-bottom-nav-offset: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  --mh-radius-card: 1rem;
+  --mh-radius-outer: 1.5rem;
+  --mh-shadow-card: 0 2px 12px rgba(0, 0, 0, 0.04);
+  --mh-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.07);
+  --mh-shadow-overlay: 0 12px 48px rgba(15, 23, 42, 0.18);
+  --mh-header-height: 3.5rem;
 }
+
+/* Consolidated Design System Utilities */
+.mh-card {
+  background-color: #ffffff;
+  border-radius: var(--mh-radius-card);
+  padding: 1rem;
+  box-shadow: var(--mh-shadow-card);
+  border: 1px solid #f1f5f9;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.mh-card:hover {
+  box-shadow: var(--mh-shadow-hover);
+}
+
+.mh-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  border-radius: var(--mh-radius-card);
+  background-color: var(--mh-primary);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+.mh-btn-primary:hover:not(:disabled) {
+  opacity: 0.95;
+}
+.mh-btn-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.mh-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mh-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  border-radius: var(--mh-radius-card);
+  background-color: var(--mh-primary-soft);
+  color: var(--mh-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+.mh-btn-secondary:hover:not(:disabled) {
+  background-color: #e0dfff;
+}
+.mh-btn-secondary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.mh-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 
 body {
   background: var(--mh-surface);

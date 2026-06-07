@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AppHeader, PageContainer } from "@/components/ui";
 import { HiChevronDown } from "react-icons/hi2";
 import { useUsers } from "@/hooks/useApi";
 import FilterSheet, { FilterOption } from "@/components/admin/manage-users/FilterSheet";
@@ -120,22 +121,13 @@ export default function MonthlyReportView() {
   const yearLabel = String(selectedYear);
 
   return (
-    <div className="mx-auto w-full max-w-lg animate-in fade-in duration-300 md:max-w-xl">
-      <div className="px-4 pb-2 pt-3 md:px-6 md:pt-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] transition active-press active:scale-[0.96]"
-        >
-          ← Back
-        </button>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
-          Monthly Cut Report
-        </h1>
-        <p className="mt-1 text-sm font-medium text-gray-500">
-          Generate monthly mess cut exports
-        </p>
-      </div>
+    <>
+      <AppHeader
+        title="Monthly Cut Report"
+        subtitle="Generate and export monthly attendance reports"
+        showBack={true}
+      />
+      <PageContainer>
 
       <div className="px-4 pb-3 md:px-6">
         {/* Mobile: chip + bottom sheet (matches Manage Users) */}
@@ -312,6 +304,7 @@ export default function MonthlyReportView() {
           />
         ))}
       </FilterSheet>
-    </div>
-  );
+    </PageContainer>
+  </>
+);
 }

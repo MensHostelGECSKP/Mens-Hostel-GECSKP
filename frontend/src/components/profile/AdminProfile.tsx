@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { AppHeader, PageContainer } from "@/components/ui";
 import { getAvatarPalette, getUserInitials } from "@/utils/userDisplay";
 import {
   HiEnvelope,
@@ -73,8 +74,14 @@ export default function AdminProfile({ user }: { user: User }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-lg animate-in fade-in px-4 pb-6 pt-4 duration-300 md:max-w-xl md:px-6">
-      <div className="mb-6 flex flex-col items-center text-center">
+    <>
+      <AppHeader
+        title="Admin Profile"
+        subtitle="Hostel administrator account details"
+        showMenu={true}
+      />
+      <PageContainer>
+        <div className="mb-6 flex flex-col items-center text-center">
         <div
           className="mb-3 flex h-20 w-20 items-center justify-center rounded-full text-3xl font-bold shadow-[0_4px_20px_rgba(68,65,204,0.15)]"
           style={{ backgroundColor: palette.bg, color: palette.text }}
@@ -134,6 +141,7 @@ export default function AdminProfile({ user }: { user: User }) {
       <p className="mt-6 text-center text-xs text-gray-400">
         Password change coming soon. Contact the system maintainer for account updates.
       </p>
-    </div>
-  );
+    </PageContainer>
+  </>
+);
 }

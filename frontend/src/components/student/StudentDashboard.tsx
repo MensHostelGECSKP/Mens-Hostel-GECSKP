@@ -11,6 +11,9 @@ import { useAttendance } from "@/hooks/useApi";
 import { computeMonthStats } from "@/utils/attendanceStats";
 import { HiBuildingOffice2 } from "react-icons/hi2";
 
+import Link from "next/link";
+import { AppHeader, PageContainer } from "@/components/ui";
+
 function formatRoom(room?: string) {
   if (!room?.trim()) return "—";
   const n = room.trim();
@@ -46,8 +49,8 @@ export default function StudentDashboard() {
   });
 
   const monthStats = useMemo(
-    () => computeMonthStats(attendance),
-    [attendance]
+    () => computeMonthStats(attendance, calendarYear, calendarMonth),
+    [attendance, calendarYear, calendarMonth]
   );
 
   const handleMonthChange = useCallback((year: number, month: number) => {
@@ -97,7 +100,21 @@ export default function StudentDashboard() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} disabled={view === "details"}>
-      <div className="mx-auto w-full max-w-lg px-4 pb-6 pt-3 md:max-w-2xl md:px-6 md:pt-6">
+      <AppHeader
+        title="Mens Hostel"
+        subtitle="GEC Sreekrishnapuram"
+        showMenu={true}
+        actions={
+          <Link
+            href="/profile"
+            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[var(--mh-primary-soft)] text-sm font-bold text-[var(--mh-primary)] ring-2 ring-white shadow-sm transition active:scale-[0.96]"
+            aria-label="Profile"
+          >
+            {user.name?.charAt(0).toUpperCase() ?? "?"}
+          </Link>
+        }
+      />
+      <PageContainer>
         {/* Welcome */}
         <section className="mb-5 animate-in fade-in duration-300">
           <p className="mh-welcome">Welcome back,</p>
@@ -114,6 +131,7 @@ export default function StudentDashboard() {
             </span>
           </div>
         </section>
+
 
         <AttendanceSummaryCard
           monthLabel={monthLabel}
@@ -162,7 +180,7 @@ export default function StudentDashboard() {
             onBack={() => setView("calendar")}
           />
         )}
-      </div>
+      </PageContainer>
     </PullToRefresh>
   );
 }

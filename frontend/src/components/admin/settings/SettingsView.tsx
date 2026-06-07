@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HiChevronRight, HiCog6Tooth, HiExclamationTriangle } from "react-icons/hi2";
+import { AppHeader, PageContainer } from "@/components/ui";
 
 const systemLinks = [
   {
@@ -19,22 +20,13 @@ export default function SettingsView() {
   const router = useRouter();
 
   return (
-    <div className="mx-auto w-full max-w-lg animate-in fade-in duration-300 md:max-w-xl md:px-6">
-      <div className="px-4 pb-2 pt-3 md:pt-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] transition active:scale-[0.98]"
-        >
-          ← Back
-        </button>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
-          Settings
-        </h1>
-        <p className="mt-1 text-sm font-medium text-gray-500">
-          Admin configuration and system tools
-        </p>
-      </div>
+    <>
+      <AppHeader
+        title="Settings"
+        subtitle="Admin configuration and system tools"
+        showBack={true}
+      />
+      <PageContainer>
 
       <section className="px-4 pb-8 md:px-0" aria-labelledby="system-management-heading">
         <h2
@@ -81,6 +73,7 @@ export default function SettingsView() {
           ))}
         </ul>
       </section>
-    </div>
-  );
+    </PageContainer>
+  </>
+);
 }

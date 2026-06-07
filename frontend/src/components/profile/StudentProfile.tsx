@@ -6,6 +6,7 @@ import { HiBuildingOffice2, HiEnvelope, HiUser, HiAcademicCap, HiArrowRightOnRec
 import ProfileInfoRow from "./ProfileInfoRow";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { AppHeader, PageContainer } from "@/components/ui";
 
 export default function StudentProfile({ user }: { user: User }) {
   const router = useRouter();
@@ -27,8 +28,14 @@ export default function StudentProfile({ user }: { user: User }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-lg animate-in fade-in px-4 pb-6 pt-4 duration-300 md:max-w-xl md:px-6">
-      <div className="mb-6 flex flex-col items-center text-center">
+    <>
+      <AppHeader
+        title="My Profile"
+        subtitle="Hostel resident account details"
+        showMenu={true}
+      />
+      <PageContainer>
+        <div className="mb-6 flex flex-col items-center text-center">
         <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[var(--mh-primary-soft)] text-3xl font-bold text-[var(--mh-primary)] shadow-[0_4px_20px_rgba(93,95,239,0.15)]">
           {initial}
         </div>
@@ -106,6 +113,7 @@ export default function StudentProfile({ user }: { user: User }) {
       <p className="mt-8 text-center text-xs text-gray-400">
         Password change coming soon. Contact the office for account updates.
       </p>
-    </div>
-  );
+    </PageContainer>
+  </>
+);
 }

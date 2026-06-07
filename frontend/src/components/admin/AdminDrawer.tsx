@@ -75,11 +75,9 @@ export default function AdminDrawer({ open, onClose }: AdminDrawerProps) {
           >
             Logout
           </button>
-          <div className="w-full text-xs leading-tight text-center px-2 select-none pt-1 text-gray-500">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-600 via-indigo-600 to-pink-500 font-semibold">Made by </span>
-            <span className="text-black font-semibold">Sabari</span>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-600 via-indigo-600 to-pink-500 font-semibold"> &amp; </span>
-            <span className="text-black font-semibold">Roomies 2.0</span>
+          <div className="w-full text-xs leading-normal text-center px-2 select-none pt-1 text-gray-400 font-medium">
+            <div>Made by Sabari &amp; Roomies</div>
+            <div className="text-[10px] opacity-75">MH App v2.0.1</div>
           </div>
         </div>
       </aside>

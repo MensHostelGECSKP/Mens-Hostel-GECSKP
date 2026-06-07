@@ -10,6 +10,7 @@ import { useNotifications, useCreateNotification, useDeleteNotification } from "
 import PullToRefresh from "@/components/student/PullToRefresh";
 import { NotificationsSkeleton } from "@/components/student/Skeleton";
 import EmptyState from "@/components/student/EmptyState";
+import { AppHeader, PageContainer } from "@/components/ui";
 
 export default function NotificationsPage() {
   const user = useCurrentUser();
@@ -136,21 +137,24 @@ export default function NotificationsPage() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} disabled={refreshing}>
-      <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-2 py-4 pb-20">
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-4 sm:p-6 border border-gray-100 mt-2">
-          
-          <div className="flex items-center justify-between mb-5">
-            <h1 className="text-xl sm:text-2xl font-bold text-indigo-700">Hostel Notifications</h1>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={handleMarkAllAsRead}
-                className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition active:scale-95 active-press"
-              >
-                Mark all read
-              </button>
-            )}
-          </div>
+      <AppHeader
+        title="Hostel Notifications"
+        subtitle={unreadCount > 0 ? `${unreadCount} unread` : "Up to date"}
+        showMenu={true}
+        actions={
+          unreadCount > 0 ? (
+            <button
+              type="button"
+              onClick={handleMarkAllAsRead}
+              className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition active:scale-95 active-press cursor-pointer"
+            >
+              Mark all read
+            </button>
+          ) : undefined
+        }
+      />
+      <PageContainer>
+        <div className="w-full bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-4 sm:p-6 border border-gray-100">
 
           {user?.role === "admin" && (
             <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-2xl bg-slate-50/50 border border-slate-100 flex flex-col gap-3.5 shadow-sm">
@@ -344,7 +348,7 @@ export default function NotificationsPage() {
             </div>
           )}
         </div>
-      </div>
+      </PageContainer>
     </PullToRefresh>
   );
 }

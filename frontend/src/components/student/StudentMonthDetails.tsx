@@ -37,9 +37,15 @@ async function exportMonthToPdf(year: number, month: number, records: Attendance
 
   const rows = buildMonthRows(year, month, records).map(({ date, meals }) => ({
     date,
-    morning: meals.morning ? "Yes" : "No",
-    noon: meals.noon ? "Yes" : "No",
-    night: meals.night ? "Yes" : "No",
+    morning: meals.morning
+      ? { text: "Yes", styles: { textColor: [22, 163, 74] as [number, number, number] } }
+      : { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } },
+    noon: meals.noon
+      ? { text: "Yes", styles: { textColor: [22, 163, 74] as [number, number, number] } }
+      : { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } },
+    night: meals.night
+      ? { text: "Yes", styles: { textColor: [22, 163, 74] as [number, number, number] } }
+      : { text: "No", styles: { textColor: [220, 38, 38] as [number, number, number] } },
   }));
 
   autoTable(doc, {
@@ -48,6 +54,18 @@ async function exportMonthToPdf(year: number, month: number, records: Attendance
     body: rows.map((r) => [r.date, r.morning, r.noon, r.night]),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [68, 65, 204] },
+    didParseCell(data) {
+      const raw = data.cell.raw as unknown;
+      if (raw && typeof raw === "object" && "styles" in raw && "text" in raw) {
+        const typedRaw = raw as {
+          styles: { textColor: [number, number, number] };
+          text: string;
+        };
+        data.cell.styles.textColor = typedRaw.styles.textColor;
+        data.cell.styles.fontStyle = "bold";
+        data.cell.text = [typedRaw.text];
+      }
+    },
   });
 
   const filename = `attendance-${year}-${String(month + 1).padStart(2, "0")}.pdf`;

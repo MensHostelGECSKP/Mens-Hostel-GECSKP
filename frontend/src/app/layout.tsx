@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { LayoutProvider } from "@/context/LayoutContext";
 import QueryProvider from "@/providers/QueryProvider";
 import Header from "@/components/Header";
 import MainContent from "@/components/MainContent";
@@ -90,17 +91,20 @@ export default function RootLayout({
       <body className={`${manrope.className} bg-[var(--mh-surface)] font-sans antialiased`}>
         <QueryProvider>
           <AuthProvider>
-            <Header />
-            <MainContent>{children}</MainContent>
-            <Toaster position="top-center" />
-            <OfflineBanner />
-            <PWARegistration />
-            <PWAInstallPrompt />
-            <PWAUpdatePrompt />
-            <ClientInserts />
+            <LayoutProvider>
+              <Header />
+              <MainContent>{children}</MainContent>
+              <Toaster position="top-center" />
+              <OfflineBanner />
+              <PWARegistration />
+              <PWAInstallPrompt />
+              <PWAUpdatePrompt />
+              <ClientInserts />
+            </LayoutProvider>
           </AuthProvider>
         </QueryProvider>
       </body>
     </html>
   );
 }
+

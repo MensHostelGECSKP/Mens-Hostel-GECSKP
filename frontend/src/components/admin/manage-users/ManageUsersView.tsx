@@ -2,6 +2,7 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AppHeader, PageContainer } from "@/components/ui";
 import { useUsers } from "@/hooks/useApi";
 import {
   useFilteredResidents,
@@ -108,20 +109,13 @@ export default function ManageUsersView() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg animate-in fade-in duration-300 md:max-w-3xl lg:max-w-4xl">
-      <div className="px-4 pb-2 pt-3 md:px-6 md:pt-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] transition active:scale-[0.98]"
-        >
-          ← Back
-        </button>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
-          Manage Users
-        </h1>
-        <p className="mt-1 text-sm font-medium text-gray-500">{subtitle}</p>
-      </div>
+    <>
+      <AppHeader
+        title="Manage Users"
+        subtitle={subtitle}
+        showBack={true}
+      />
+      <PageContainer>
 
       <div className="sticky top-14 z-40 border-b border-gray-100/80 bg-[var(--mh-surface)]/95 px-4 pb-3 pt-1 backdrop-blur-md md:px-6">
         <ManageUsersSearchBar
@@ -323,6 +317,7 @@ export default function ManageUsersView() {
           }}
         />
       </FilterSheet>
-    </div>
+    </PageContainer>
+  </>
   );
 }

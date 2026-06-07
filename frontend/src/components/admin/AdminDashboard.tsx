@@ -2,6 +2,9 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import { AppHeader, PageContainer } from "@/components/ui";
 import type jsPDF from "jspdf";
 import toast from "react-hot-toast";
 import AdminOverviewCard from "@/components/admin/AdminOverviewCard";
@@ -82,6 +85,7 @@ function handlePDFExport(doc: jsPDF, filename: string) {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { user } = useAuth();
   const [date, setDate] = useState("");
   const [fetchDate, setFetchDate] = useState("");
   const [navLoading, setNavLoading] = useState(false);
@@ -367,7 +371,21 @@ export default function AdminDashboard() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="mx-auto w-full max-w-lg animate-in fade-in px-4 pb-6 pt-3 duration-300 md:max-w-3xl md:px-6 md:pt-6 lg:max-w-4xl">
+      <AppHeader
+        title="Mens Hostel"
+        subtitle="Admin"
+        showMenu={true}
+        actions={
+          <Link
+            href="/profile"
+            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[var(--mh-primary-soft)] text-sm font-bold text-[var(--mh-primary)] ring-2 ring-white shadow-sm transition active:scale-[0.96]"
+            aria-label="Profile"
+          >
+            {user?.name?.charAt(0).toUpperCase() ?? "A"}
+          </Link>
+        }
+      />
+      <PageContainer>
         {/* Overview header */}
         <header className="mb-5">
           <p className="text-sm font-medium text-gray-500">{formatTodayLabel()}</p>
@@ -379,7 +397,7 @@ export default function AdminDashboard() {
               type="button"
               onClick={handleNewUser}
               disabled={navLoading}
-              className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full bg-[var(--mh-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98] hover:opacity-95 disabled:opacity-60"
+              className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full bg-[var(--mh-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98] hover:opacity-95 disabled:opacity-60 cursor-pointer"
             >
               <svg
                 className="h-4 w-4"
@@ -434,7 +452,7 @@ export default function AdminDashboard() {
           bills={bills}
           loading={activityLoading && users.length === 0 && notifications.length === 0}
         />
-      </div>
+      </PageContainer>
     </PullToRefresh>
   );
 }

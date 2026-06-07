@@ -15,21 +15,44 @@ export type MonthAttendanceStats = {
   presentDays: number;
   messCutDays: number;
   partialDays: number;
+  totalDays: number;
 };
 
 export function computeMonthStats(
-  records: AttendanceRecord[]
+  records: AttendanceRecord[],
+  year?: number,
+  month?: number
 ): MonthAttendanceStats {
-  let presentDays = 0;
   let messCutDays = 0;
   let partialDays = 0;
 
   for (const record of records) {
     const status = getDayStatus(record);
-    if (status === "full") presentDays++;
-    else if (status === "messcut") messCutDays++;
-    else if (status === "partial") partialDays++;
+    if (status === "messcut") {
+      messCutDays++;
+    } else if (status === "partial") {
+      partialDays++;
+    }
   }
 
-  return { presentDays, messCutDays, partialDays };
+  // Determine year and month to get total days in the month
+  let y = year;
+  let m = month;
+  if (y === undefined || m === undefined) {
+    const firstRecord = records[0];
+    if (firstRecord && firstRecord.date) {
+      const parts = firstRecord.date.split("-");
+      y = parseInt(parts[0], 10);
+      m = parseInt(parts[1], 10) - 1; // Convert 1-indexed to 0-indexed
+    } else {
+      const d = new Date();
+      y = d.getFullYear();
+      m = d.getMonth();
+    }
+  }
+
+  const totalDays = new Date(y, m + 1, 0).getDate();
+  const presentDays = totalDays - messCutDays;
+
+  return { presentDays, messCutDays, partialDays, totalDays };
 }

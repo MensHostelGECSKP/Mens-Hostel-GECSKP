@@ -11,6 +11,7 @@ import { formatBillMonthLabel, formatDueDate } from "@/utils/messBillDisplay";
 import { Skeleton } from "@/components/student/Skeleton";
 import DeleteMessBillDialog from "./DeleteMessBillDialog";
 import EmptyState from "@/components/student/EmptyState";
+import { AppHeader, PageContainer } from "@/components/ui";
 
 const currentYear = new Date().getFullYear();
 const years = [currentYear, currentYear + 1, currentYear - 1];
@@ -79,20 +80,13 @@ export default function UploadMessBillView() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-lg animate-in fade-in duration-300 md:max-w-xl md:px-6">
-      <div className="px-4 pb-2 pt-3 md:pt-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] active-press"
-        >
-          ← Back
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Upload Mess Bill</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Publish the official bill file for all residents
-        </p>
-      </div>
+    <>
+      <AppHeader
+        title="Upload Mess Bill"
+        subtitle="Publish the official bill file for all residents"
+        showBack={true}
+      />
+      <PageContainer>
 
       <form onSubmit={handlePublish} className="mx-4 mb-6 rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] md:mx-0">
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">
@@ -218,6 +212,7 @@ export default function UploadMessBillView() {
       </section>
 
       <DeleteMessBillDialog bill={deleteTarget} onClose={() => setDeleteTarget(null)} />
-    </div>
-  );
+    </PageContainer>
+  </>
+);
 }

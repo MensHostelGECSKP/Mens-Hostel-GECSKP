@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuditLogs, AuditLogEntry } from "@/hooks/useApi";
 import { HiChevronDown, HiChevronUp, HiShieldCheck } from "react-icons/hi2";
 import Spinner from "@/components/Spinner";
+import { AppHeader, PageContainer } from "@/components/ui";
 
 function LogDetailRow({ log }: { log: AuditLogEntry }) {
   const [expanded, setExpanded] = useState(false);
@@ -93,30 +94,13 @@ export default function AuditLogsView() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-lg animate-in fade-in duration-300 md:max-w-xl">
-      <div className="px-4 pb-2 pt-3 md:px-6 md:pt-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="mb-3 flex min-h-[44px] items-center gap-1 text-sm font-semibold text-[var(--mh-primary)] transition active-press active:scale-[0.96]"
-        >
-          ← Back
-        </button>
-        
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100">
-            <HiShieldCheck className="h-5.5 w-5.5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
-              System Audit Logs
-            </h1>
-            <p className="mt-0.5 text-xs font-medium text-gray-500">
-              Audit trail of admin and system activities
-            </p>
-          </div>
-        </div>
-      </div>
+    <>
+      <AppHeader
+        title="System Audit Logs"
+        subtitle="Audit trail of admin and system activities"
+        showBack={true}
+      />
+      <PageContainer>
 
       <div className="px-4 pb-28 pt-4 md:px-6">
         {isLoading ? (
@@ -179,7 +163,8 @@ export default function AuditLogsView() {
             )}
           </div>
         )}
-      </div>
-    </div>
+        </div>
+      </PageContainer>
+    </>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { MdRestaurant } from "react-icons/md";
 import { motion } from "framer-motion";
 import { RulesSkeleton } from "@/components/student/Skeleton";
+import { AppHeader, PageContainer } from "@/components/ui";
 
 export default function RulesPage() {
   const router = useRouter();
@@ -74,31 +75,13 @@ export default function RulesPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-[var(--mh-surface)] font-sans antialiased text-gray-900 pb-16">
-      {/* Header Panel */}
-      <header className="bg-white border-b border-gray-100 py-5 px-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-        <div className="mx-auto w-full max-w-lg md:max-w-3xl lg:max-w-4xl flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 transition active:scale-95 border border-gray-100"
-            aria-label="Go back"
-          >
-            <HiChevronLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-gray-900 md:text-2xl">
-              Rules & Guidelines
-            </h1>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Hostel rules and responsibilities for all residents.
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Categories and Rules Lists */}
-      <main className="mx-auto w-full max-w-lg px-4 pt-6 md:max-w-3xl md:px-6 lg:max-w-4xl">
+    <>
+      <AppHeader
+        title="Rules & Guidelines"
+        subtitle="Hostel rules and responsibilities for all residents."
+        showBack={true}
+      />
+      <PageContainer>
         {/* Category Pills Selector */}
         <section className="mb-6 flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-gray-200">
           {categories.map((cat) => {
@@ -220,7 +203,7 @@ export default function RulesPage() {
             </motion.section>
           )}
         </div>
-      </main>
-    </div>
+      </PageContainer>
+    </>
   );
 }
