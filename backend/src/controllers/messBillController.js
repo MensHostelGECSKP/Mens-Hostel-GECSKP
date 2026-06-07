@@ -4,15 +4,16 @@ const { logAuditEvent } = require('../utils/auditLogger');
 
 async function publishMessBill(req, res, next) {
   try {
-    const { month, year, dueDate } = req.validated;
+    const { month, year, dueDate, replace } = req.validated;
     const result = await messBillService.publishMessBill({
       month,
       year,
       dueDate,
       file: req.file,
       uploadedBy: req.user.userId,
+      replace,
     });
-    await logAuditEvent(req, 'MESS_BILL_PUBLISH', { month, year, dueDate, fileName: req.file?.originalname }, result.bill?._id);
+    await logAuditEvent(req, 'MESS_BILL_PUBLISH', { month, year, dueDate, fileName: req.file?.originalname, replace }, result.bill?._id);
     res.status(201).json({
       message: 'Mess bill published',
       bill: result.bill,
@@ -100,6 +101,10 @@ function sendBillFile(res, bill, buffer, disposition) {
 async function respondWithBillFile(req, res, next, disposition) {
   try {
     const access = await messBillService.getBillFileAccess(req.params.id);
+    if (access.bill.storageProvider === 'google-drive') {
+      const url = disposition === 'inline' ? access.bill.viewUrl : access.bill.downloadUrl;
+      return res.json({ url });
+    }
     sendBillFile(res, access.bill, access.buffer, disposition);
   } catch (err) {
     if (err.message === 'NOT_FOUND') {

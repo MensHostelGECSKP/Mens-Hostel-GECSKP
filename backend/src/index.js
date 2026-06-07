@@ -132,7 +132,7 @@ mongoose.connect(config.mongodbUri, {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`[config] Mess bill storage: local (${config.messBillStorageDir})`);
+  console.log(`[config] Mess bill storage provider: ${config.storageProvider || 'local'}`);
   if (!config.emailUser || !config.emailPass) {
     console.warn(
       '[config] EMAIL_USER / EMAIL_PASS are not set — forgot-password will save reset tokens but cannot send email.'

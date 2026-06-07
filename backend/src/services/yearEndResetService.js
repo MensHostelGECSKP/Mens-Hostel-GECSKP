@@ -36,17 +36,17 @@ function isTransactionUnsupportedError(err) {
   );
 }
 
-async function deleteStoredFilesForBills() {
+async function deleteStoredFilesForBills(deleteDriveFiles) {
   try {
-    await messBillService.removeAllStoredFiles();
+    await messBillService.removeAllStoredFiles({ deleteDriveFiles });
   } catch (err) {
     console.error('[year-end-reset] Failed to clear mess bill storage:', err.message);
   }
 }
 
-async function deleteOperationalData(session) {
+async function deleteOperationalData(deleteDriveFiles, session) {
   const opts = session ? { session } : {};
-  await deleteStoredFilesForBills();
+  await deleteStoredFilesForBills(deleteDriveFiles);
   const attendanceResult = await Attendance.deleteMany({}, opts);
   const paymentResult = await MessBillPayment.deleteMany({}, opts);
   const messBillResult = await MessBill.deleteMany({}, opts);
@@ -61,11 +61,11 @@ async function deleteOperationalData(session) {
   };
 }
 
-async function performYearEndResetWithTransaction() {
+async function performYearEndResetWithTransaction(deleteDriveFiles) {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const deleted = await deleteOperationalData(session);
+    const deleted = await deleteOperationalData(deleteDriveFiles, session);
     await session.commitTransaction();
     return { deleted };
   } catch (err) {
@@ -78,9 +78,9 @@ async function performYearEndResetWithTransaction() {
   }
 }
 
-async function performYearEndReset() {
+async function performYearEndReset(deleteDriveFiles) {
   try {
-    return await performYearEndResetWithTransaction();
+    return await performYearEndResetWithTransaction(deleteDriveFiles);
   } catch (err) {
     if (!isTransactionUnsupportedError(err)) {
       throw err;
@@ -88,7 +88,7 @@ async function performYearEndReset() {
     console.warn(
       '[year-end-reset] MongoDB transactions unavailable; falling back to sequential deletes'
     );
-    const deleted = await deleteOperationalData();
+    const deleted = await deleteOperationalData(deleteDriveFiles);
     return { deleted };
   }
 }

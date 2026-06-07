@@ -2,7 +2,7 @@ const MessBill = require('../models/MessBill');
 const MessBillPayment = require('../models/MessBillPayment');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
-const { getMessBillStorage } = require('../storage');
+const { getMessBillStorage, getStorageProviderByName } = require('../storage');
 const { buildMessBillStorageKey } = require('../storage/storageKey');
 const notificationService = require('./notificationService');
 const { formatBillMonthLabel, formatDueDate } = require('../utils/messBillFormat');
@@ -35,14 +35,90 @@ async function findExistingBill(month, year) {
 /**
  * Publish a new mess bill: upload to storage, save metadata, payments, broadcast notification.
  */
-async function publishMessBill({ month, year, dueDate, file, uploadedBy }) {
+async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace }) {
   if (!file || !file.buffer) {
     throw new Error('INVALID_FILE');
   }
 
   const existing = await findExistingBill(month, year);
   if (existing) {
-    throw new Error('DUPLICATE_BILL_MONTH');
+    if (!replace) {
+      throw new Error('DUPLICATE_BILL_MONTH');
+    }
+
+    // Delete existing file using the provider it was saved with
+    const oldProviderName = existing.storageProvider || 'local';
+    const oldStorageKey = existing.storageKey;
+    try {
+      const oldProvider = getStorageProviderByName(oldProviderName);
+      await oldProvider.removeFile(oldStorageKey);
+    } catch (cleanupErr) {
+      console.error('[mess-bill] Failed to delete old storage file:', cleanupErr.message);
+    }
+
+    const storageKey = buildMessBillStorageKey({
+      month,
+      year,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+    });
+
+    let uploadResult;
+    try {
+      uploadResult = await messBillStorage.saveFile({
+        buffer: file.buffer,
+        storageKey,
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        month,
+        year,
+      });
+    } catch (err) {
+      console.error('[mess-bill] Storage upload failed:', err.message);
+      throw new Error('STORAGE_UPLOAD_FAILED');
+    }
+
+    const newStorageKey = typeof uploadResult === 'string' ? uploadResult : uploadResult.storageKey;
+
+    existing.fileName = file.originalname;
+    existing.storageKey = newStorageKey;
+    existing.mimeType = file.mimetype;
+    existing.fileSize = file.buffer.length;
+    existing.storageProvider = messBillStorage.name;
+    existing.uploadedBy = uploadedBy;
+    existing.uploadedAt = new Date();
+    existing.dueDate = dueDate;
+
+    if (messBillStorage.name === 'google-drive') {
+      existing.fileId = uploadResult.fileId;
+      existing.viewUrl = uploadResult.viewUrl;
+      existing.downloadUrl = uploadResult.downloadUrl;
+    } else {
+      existing.fileId = undefined;
+      existing.viewUrl = undefined;
+      existing.downloadUrl = undefined;
+    }
+
+    await existing.save();
+
+    const label = formatBillMonthLabel(month, year);
+    const dueStr = formatDueDate(dueDate);
+    const warnings = [];
+
+    try {
+      await notificationService.createBroadcast({
+        title: '📢 Mess Bill Updated',
+        message: `${label} mess bill has been updated/re-published.\n\nDue Date:\n${dueStr}\n\nView and download the new bill in the Mess section.`,
+        type: 'mess_bill',
+        messBillId: existing._id,
+      });
+    } catch (err) {
+      console.error('[mess-bill] Broadcast notification failed:', err.message);
+      warnings.push('notification_failed');
+    }
+
+    const billDoc = attachFileUrls(existing.toObject());
+    return { bill: billDoc, notified: warnings.length === 0, warnings };
   }
 
   const storageKey = buildMessBillStorageKey({
@@ -52,35 +128,47 @@ async function publishMessBill({ month, year, dueDate, file, uploadedBy }) {
     mimeType: file.mimetype,
   });
 
+  let uploadResult;
   try {
-    await messBillStorage.saveFile({
+    uploadResult = await messBillStorage.saveFile({
       buffer: file.buffer,
       storageKey,
+      fileName: file.originalname,
       mimeType: file.mimetype,
+      month,
+      year,
     });
   } catch (err) {
     console.error('[mess-bill] Storage upload failed:', err.message);
     throw new Error('STORAGE_UPLOAD_FAILED');
   }
 
+  const newStorageKey = typeof uploadResult === 'string' ? uploadResult : uploadResult.storageKey;
+
   const bill = new MessBill({
     month,
     year,
     dueDate,
     fileName: file.originalname,
-    storageKey,
+    storageKey: newStorageKey,
     mimeType: file.mimetype,
     fileSize: file.buffer.length,
-    storageProvider: 'local',
+    storageProvider: messBillStorage.name,
     uploadedBy,
     isPublished: true,
   });
+
+  if (messBillStorage.name === 'google-drive') {
+    bill.fileId = uploadResult.fileId;
+    bill.viewUrl = uploadResult.viewUrl;
+    bill.downloadUrl = uploadResult.downloadUrl;
+  }
 
   try {
     await bill.save();
   } catch (err) {
     try {
-      await messBillStorage.removeFile(storageKey);
+      await messBillStorage.removeFile(newStorageKey);
     } catch (cleanupErr) {
       console.error('[mess-bill] Failed to roll back uploaded file:', cleanupErr.message);
     }
@@ -170,15 +258,22 @@ async function getBillFileAccess(id) {
     throw new Error('NOT_FOUND');
   }
 
+  // Google Drive files are served by returning their view/download URL.
+  // There is no need to download the buffer from Google Drive to the backend.
+  if (bill.storageProvider === 'google-drive') {
+    return { bill };
+  }
+
   const storageKey = getBillStorageKey(bill);
   try {
-    const buffer = await messBillStorage.readFile(storageKey);
+    const provider = getStorageProviderByName(bill.storageProvider || 'local');
+    const buffer = await provider.readFile(storageKey);
     return { bill, buffer };
   } catch (err) {
-    if (err.code === 'ENOENT') {
+    if (err.code === 'ENOENT' || err.message === 'INVALID_FILE') {
       throw new Error('FILE_NOT_FOUND');
     }
-    console.error('[mess-bill] Local file read failed:', err.message);
+    console.error('[mess-bill] Storage file read failed:', err.message);
     throw new Error('STORAGE_UNAVAILABLE');
   }
 }
@@ -226,7 +321,8 @@ async function deleteMessBill(id) {
   await MessBill.findByIdAndDelete(id);
 
   try {
-    await messBillStorage.removeFile(storageKey);
+    const provider = getStorageProviderByName(bill.storageProvider || 'local');
+    await provider.removeFile(storageKey);
   } catch (err) {
     console.error('[mess-bill] Storage file delete failed:', storageKey, err.message);
   }

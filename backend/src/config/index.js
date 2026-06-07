@@ -3,6 +3,9 @@ require('dotenv').config();
 
 // Validate required environment variables
 const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
+if (process.env.MESS_BILL_STORAGE_PROVIDER === 'google-drive') {
+  requiredEnvVars.push('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN');
+}
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -57,6 +60,13 @@ const config = {
 
   // Mess bill file storage (local filesystem)
   messBillStorageDir: process.env.MESS_BILL_STORAGE_DIR || 'uploads/mess-bills',
+
+  // Google Drive & Provider configuration
+  googleClientId: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  googleRefreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+  googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || 'https://developers.google.com/oauthplayground',
+  storageProvider: process.env.MESS_BILL_STORAGE_PROVIDER || 'local',
 
   // Mess bill reminders (cron)
   messBillReminderCron: process.env.MESS_BILL_REMINDER_CRON || '0 9 * * *',

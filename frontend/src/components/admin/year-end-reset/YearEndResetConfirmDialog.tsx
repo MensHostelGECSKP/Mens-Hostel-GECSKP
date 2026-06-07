@@ -10,7 +10,7 @@ const CONFIRM_PHRASE = "RESET_DATABASE";
 type YearEndResetConfirmDialogProps = {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (deleteDriveFiles: boolean) => void;
   isResetting: boolean;
 };
 
@@ -33,6 +33,7 @@ export default function YearEndResetConfirmDialog({
   const trapRef = useFocusTrap(open);
   const inputId = useId();
   const [phrase, setPhrase] = useState("");
+  const [deleteDriveFiles, setDeleteDriveFiles] = useState(false);
 
   const phraseMatches = phrase === CONFIRM_PHRASE;
   const canSubmit = phraseMatches && !isResetting;
@@ -40,6 +41,7 @@ export default function YearEndResetConfirmDialog({
   useEffect(() => {
     if (!open) {
       setPhrase("");
+      setDeleteDriveFiles(false);
     }
   }, [open]);
 
@@ -117,6 +119,23 @@ export default function YearEndResetConfirmDialog({
           />
         </div>
 
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-gray-100 bg-gray-50 px-3 py-3">
+          <input
+            id="delete-drive-files"
+            type="checkbox"
+            checked={deleteDriveFiles}
+            onChange={(e) => setDeleteDriveFiles(e.target.checked)}
+            disabled={isResetting}
+            className="mt-1 h-4.5 w-4.5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+          />
+          <label htmlFor="delete-drive-files" className="select-none text-sm font-medium text-gray-750">
+            Delete mess bills from Google Drive
+            <span className="mt-0.5 block text-xs font-normal text-gray-500">
+              If unchecked, bills remain in your Google Drive for record keeping but database records are deleted.
+            </span>
+          </label>
+        </div>
+
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row">
           <button
             type="button"
@@ -128,7 +147,7 @@ export default function YearEndResetConfirmDialog({
           </button>
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={() => onConfirm(deleteDriveFiles)}
             disabled={!canSubmit}
             className="min-h-[48px] flex-1 rounded-xl bg-red-600 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >

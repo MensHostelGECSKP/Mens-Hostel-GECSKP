@@ -74,6 +74,30 @@ export default function UploadMessBillView() {
       await refetch();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to publish bill";
+      if (msg === "A bill for this month already exists" || msg.includes("exists")) {
+        const confirmReplace = window.confirm("A bill already exists for this month and year. Do you want to replace it?");
+        if (confirmReplace) {
+          formData.append("replace", "true");
+          try {
+            const result = await publishBill.mutateAsync(formData);
+            if (result?.warnings?.includes("notification_failed")) {
+              toast.success("Bill replaced, but some notifications could not be sent.");
+            } else {
+              toast.success("Mess bill replaced successfully");
+            }
+            setFile(null);
+            setDueDate("");
+            const input = document.getElementById("bill-file") as HTMLInputElement | null;
+            if (input) input.value = "";
+            await refetch();
+          } catch (retryErr) {
+            const retryMsg = retryErr instanceof Error ? retryErr.message : "Failed to replace bill";
+            setFormError(retryMsg);
+            toast.error(retryMsg);
+          }
+          return;
+        }
+      }
       setFormError(msg);
       toast.error(msg);
     }

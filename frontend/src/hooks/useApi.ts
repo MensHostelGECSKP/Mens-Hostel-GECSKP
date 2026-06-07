@@ -334,9 +334,10 @@ export function useYearEndReset() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (deleteDriveFiles?: boolean) => {
       const response = await api.post<{ message?: string }>('/api/system/year-end-reset', {
         confirmPhrase: YEAR_END_RESET_PHRASE,
+        deleteDriveFiles: !!deleteDriveFiles,
       });
       if (response.error) {
         throw new Error(

@@ -14,8 +14,9 @@ async function getYearEndResetStats(req, res, next) {
 
 async function yearEndReset(req, res, next) {
   try {
-    const result = await yearEndResetService.performYearEndReset();
-    await logAuditEvent(req, 'YEAR_END_RESET', { deleted: result.deleted });
+    const { deleteDriveFiles } = req.body;
+    const result = await yearEndResetService.performYearEndReset(deleteDriveFiles);
+    await logAuditEvent(req, 'YEAR_END_RESET', { deleted: result.deleted, deleteDriveFiles });
     res.json({
       message: 'Academic year reset complete',
       ...result,

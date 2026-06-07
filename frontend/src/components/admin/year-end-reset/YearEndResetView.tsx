@@ -25,10 +25,10 @@ export default function YearEndResetView() {
   const { data: stats, isLoading, error, refetch } = useYearEndResetStats();
   const yearEndReset = useYearEndReset();
 
-  const handleConfirmReset = async () => {
+  const handleConfirmReset = async (deleteDriveFiles: boolean) => {
     setResetError(null);
     try {
-      await yearEndReset.mutateAsync();
+      await yearEndReset.mutateAsync(deleteDriveFiles);
       setDialogOpen(false);
       setResetComplete(true);
     } catch (err) {

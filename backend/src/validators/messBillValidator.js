@@ -9,6 +9,7 @@ const publishMessBillFieldsSchema = z.object({
   dueDate: z.coerce.date().refine((d) => !Number.isNaN(d.getTime()), {
     message: 'Invalid due date',
   }),
+  replace: z.preprocess((val) => val === 'true' || val === true, z.boolean()).optional(),
 });
 
 function validatePublishMessBill(req, res, next) {

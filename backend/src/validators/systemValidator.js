@@ -5,6 +5,7 @@ const YEAR_END_RESET_PHRASE = 'RESET_DATABASE';
 
 const yearEndResetSchema = z.object({
   confirmPhrase: z.literal(YEAR_END_RESET_PHRASE),
+  deleteDriveFiles: z.boolean().optional(),
 });
 
 const validateYearEndReset = validate(yearEndResetSchema, 'body');
