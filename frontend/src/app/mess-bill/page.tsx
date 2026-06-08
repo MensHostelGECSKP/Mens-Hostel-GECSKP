@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import PullToRefresh from "@/components/student/PullToRefresh";
 import MessBillCard from "@/components/student/mess-bill/MessBillCard";
 import MessBillsSkeleton from "@/components/student/mess-bill/MessBillsSkeleton";
+import { MessBillsPageSkeleton } from "@/components/student/Skeleton";
 import { useMessBills } from "@/hooks/useApi";
 
 import EmptyState from "@/components/student/EmptyState";
@@ -35,7 +36,11 @@ export default function MessBillPage() {
     await refetch();
   }, [refetch]);
 
-  if (authLoading || !isLoggedIn || user?.role === "admin") {
+  if (authLoading) {
+    return <MessBillsPageSkeleton />;
+  }
+
+  if (!isLoggedIn || user?.role === "admin") {
     return null;
   }
 

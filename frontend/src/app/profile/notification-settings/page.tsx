@@ -21,6 +21,7 @@ import {
   useUpdateNotificationSettings
 } from "@/hooks/useApi";
 import { AppHeader, PageContainer } from "@/components/ui";
+import FullPageLoader from "@/components/FullPageLoader";
 
 // Helper to convert VAPID public key
 function urlBase64ToUint8Array(base64String: string) {
@@ -170,11 +171,7 @@ export default function NotificationSettingsPage() {
   };
 
   if (loading || !user) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-      </div>
-    );
+    return <FullPageLoader text="Loading settings..." />;
   }
 
   return (

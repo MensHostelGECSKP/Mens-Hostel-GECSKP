@@ -221,7 +221,7 @@ export default function EditUserModal({ user, onClose, onSaved }: EditUserModalP
               disabled={updateUser.isPending}
               className="min-h-[48px] flex-1 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-60"
             >
-              {updateUser.isPending ? "Saving…" : "Save changes"}
+              {updateUser.isPending ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>

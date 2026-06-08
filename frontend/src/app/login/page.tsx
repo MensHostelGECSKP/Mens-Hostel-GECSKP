@@ -10,19 +10,24 @@ import { useForm } from "@/utils/useForm";
 import { api } from "@/utils/api";
 import Image from "next/image";
 import { HiExclamationTriangle, HiEye, HiEyeSlash } from "react-icons/hi2";
+import FullPageLoader from "@/components/FullPageLoader";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setIsLoggedIn, updateUserFromToken, isLoggedIn } = useAuth();
+  const { setIsLoggedIn, updateUserFromToken, isLoggedIn, loading } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isLoggedIn) {
+    if (!loading && isLoggedIn) {
       router.replace("/dashboard");
     }
-  }, [isLoggedIn, router]);
+  }, [loading, isLoggedIn, router]);
+
+  if (loading) {
+    return <FullPageLoader text="Authenticating..." />;
+  }
 
   const {
     values,

@@ -265,7 +265,7 @@ export default function MonthlyReportView() {
               aria-hidden
             />
           )}
-          {generating ? "Generating Report..." : "Generate Excel Report"}
+          {generating ? "Generating..." : "Generate Excel Report"}
         </button>
       </div>
 

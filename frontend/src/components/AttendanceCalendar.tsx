@@ -462,7 +462,7 @@ function StudentMarkModal({
           onClick={onSave}
           disabled={loading}
         >
-          {loading ? "Saving…" : "Save"}
+          {loading ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

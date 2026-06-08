@@ -3,8 +3,8 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import Spinner from "@/components/Spinner";
 import ManageUsersView from "@/components/admin/manage-users/ManageUsersView";
+import { ManageUsersPageSkeleton } from "@/components/admin/manage-users/ManageUsersSkeleton";
 
 export default function ManageUsersPage() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function ManageUsersPage() {
   }, [loading, isLoggedIn, user?.role, router]);
 
   if (loading) {
-    return <Spinner className="min-h-[50vh]" />;
+    return <ManageUsersPageSkeleton />;
   }
 
   if (!isLoggedIn || user?.role !== "admin") {

@@ -3,8 +3,8 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import Spinner from "@/components/Spinner";
 import MonthlyReportView from "@/components/admin/monthly-report/MonthlyReportView";
+import { MonthlyReportPageSkeleton } from "@/components/admin/monthly-report/MonthlyReportSkeleton";
 
 export default function MonthlyReportPage() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function MonthlyReportPage() {
   }, [loading, isLoggedIn, user?.role, router]);
 
   if (loading) {
-    return <Spinner className="min-h-[50vh]" />;
+    return <MonthlyReportPageSkeleton />;
   }
 
   if (!isLoggedIn || user?.role !== "admin") {

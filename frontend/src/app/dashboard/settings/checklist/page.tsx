@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { AppHeader, PageContainer } from "@/components/ui";
 import { api } from "@/utils/api";
-import Spinner from "@/components/Spinner";
+import FullPageLoader from "@/components/FullPageLoader";
 import {
   HiCheckCircle,
   HiXCircle,
@@ -175,7 +175,7 @@ export default function ChecklistPage() {
   };
 
   if (loading) {
-    return <Spinner className="min-h-[50vh]" />;
+    return <FullPageLoader text="Loading checklist..." />;
   }
 
   if (!isLoggedIn || user?.role !== "admin") {

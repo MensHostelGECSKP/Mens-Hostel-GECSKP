@@ -7,6 +7,7 @@ import { validateEmail, validatePassword } from "@/utils/validation";
 import { useForm } from "@/utils/useForm";
 import { useCreateUser } from "@/hooks/useApi";
 import Spinner from "@/components/Spinner";
+import FullPageLoader from "@/components/FullPageLoader";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CreateUserPage() {
@@ -70,7 +71,7 @@ export default function CreateUserPage() {
   });
 
   if (loading) {
-    return <Spinner className="min-h-[50vh]" />;
+    return <FullPageLoader text="Loading..." />;
   }
 
   if (!isLoggedIn || user?.role !== "admin") {

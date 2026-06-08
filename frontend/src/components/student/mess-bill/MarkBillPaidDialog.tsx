@@ -76,7 +76,7 @@ export default function MarkBillPaidDialog({
             disabled={isPending}
             className="min-h-[48px] flex-1 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white disabled:opacity-60"
           >
-            {isPending ? "Saving…" : "Mark as Paid"}
+            {isPending ? "Saving..." : "Mark as Paid"}
           </button>
         </div>
       </div>

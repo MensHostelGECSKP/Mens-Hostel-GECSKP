@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import Spinner from "@/components/Spinner";
+import FullPageLoader from "@/components/FullPageLoader";
 import SettingsView from "@/components/admin/settings/SettingsView";
 
 export default function SettingsPage() {
@@ -21,7 +21,7 @@ export default function SettingsPage() {
   }, [loading, isLoggedIn, user?.role, router]);
 
   if (loading) {
-    return <Spinner className="min-h-[50vh]" />;
+    return <FullPageLoader text="Loading settings..." />;
   }
 
   if (!isLoggedIn || user?.role !== "admin") {

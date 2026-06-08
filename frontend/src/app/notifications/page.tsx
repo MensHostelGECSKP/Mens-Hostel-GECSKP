@@ -291,7 +291,7 @@ export default function NotificationsPage() {
                 className="w-full bg-indigo-600 text-white py-2.5 rounded-xl hover:bg-indigo-700 transition active:scale-[0.97] active-press font-semibold mt-1 flex items-center justify-center gap-2 cursor-pointer shadow-sm shadow-indigo-100" 
                 disabled={submitting}
               >
-                {submitting ? "Adding..." : "Add Notification"}
+                {submitting ? "Publishing..." : "Publish Notification"}
               </button>
             </form>
           )}

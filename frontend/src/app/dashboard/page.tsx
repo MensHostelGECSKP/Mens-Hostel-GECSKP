@@ -4,15 +4,16 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuth, useCurrentUser } from "@/context/AuthContext";
 import Spinner from "@/components/Spinner";
+import { StudentDashboardSkeleton, AdminDashboardSkeleton } from "@/components/student/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiSparkles, HiCheckCircle, HiBell, HiDocumentText, HiBuildingOffice } from "react-icons/hi2";
 
 const AdminDashboard = dynamic(() => import("@/components/admin/AdminDashboard"), {
-  loading: () => <Spinner className="min-h-[50vh]" />,
+  loading: () => <AdminDashboardSkeleton />,
 });
 
 const StudentDashboard = dynamic(() => import("@/components/student/StudentDashboard"), {
-  loading: () => <Spinner className="min-h-[50vh]" />,
+  loading: () => <StudentDashboardSkeleton />,
 });
 
 function DashboardContent() {
@@ -20,6 +21,13 @@ function DashboardContent() {
   const { isLoggedIn, loading } = useAuth();
   const user = useCurrentUser();
   const [showWelcome, setShowWelcome] = useState(false);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!loading && !isLoggedIn) {
+      router.replace("/login");
+    }
+  }, [loading, isLoggedIn, router]);
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -50,7 +58,10 @@ function DashboardContent() {
   };
 
   if (loading) {
-    return <Spinner className="min-h-[50vh]" />;
+    if (user?.role === "admin") {
+      return <AdminDashboardSkeleton />;
+    }
+    return <StudentDashboardSkeleton />;
   }
 
   if (!isLoggedIn || !user) {

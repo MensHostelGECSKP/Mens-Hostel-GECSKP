@@ -187,7 +187,7 @@ export default function UploadMessBillView() {
           className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white disabled:opacity-60 active-press active:scale-[0.96]"
         >
           <HiArrowUpTray className="h-5 w-5" />
-          {publishBill.isPending ? "Publishing…" : "Publish"}
+          {publishBill.isPending ? "Uploading..." : "Publish"}
         </button>
       </form>
 

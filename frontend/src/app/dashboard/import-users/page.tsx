@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import Spinner from "@/components/Spinner";
+import FullPageLoader from "@/components/FullPageLoader";
 import { api } from "@/utils/api";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,6 +59,7 @@ export default function ImportUsersPage() {
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [executing, setExecuting] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -70,7 +72,7 @@ export default function ImportUsersPage() {
   }, [loading, isLoggedIn, user?.role, router]);
 
   if (loading) {
-    return <Spinner className="min-h-[50vh]" />;
+    return <FullPageLoader text="Loading..." />;
   }
 
   if (!isLoggedIn || user?.role !== "admin") {
@@ -165,8 +167,9 @@ export default function ImportUsersPage() {
   };
 
   const handleExecuteImport = async () => {
-    if (!previewData || previewData.validRowsCount === 0) return;
+    if (!previewData || previewData.validRowsCount === 0 || executing) return;
 
+    setExecuting(true);
     setShowConfirmModal(false);
     setStep("importing");
     setStatusMessage("Adding users to the database and sending welcome emails...");
@@ -192,6 +195,8 @@ export default function ImportUsersPage() {
     } catch (err) {
       toast.error("An error occurred during import execution.");
       setStep("preview");
+    } finally {
+      setExecuting(false);
     }
   };
 
@@ -202,6 +207,7 @@ export default function ImportUsersPage() {
     setPreviewData(null);
     setImportResult(null);
     setStep("upload");
+    setExecuting(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -569,9 +575,17 @@ export default function ImportUsersPage() {
                 <button
                   type="button"
                   onClick={handleExecuteImport}
-                  className="min-h-[44px] w-full rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white hover:opacity-90 shadow-sm transition active:scale-[0.98]"
+                  disabled={executing}
+                  className="min-h-[44px] w-full rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white hover:opacity-90 shadow-sm transition active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-1.5"
                 >
-                  Import Users
+                  {executing ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Importing...
+                    </>
+                  ) : (
+                    "Import Users"
+                  )}
                 </button>
               </div>
             </motion.div>

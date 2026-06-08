@@ -151,4 +151,120 @@ export function UploadMessBillSkeleton() {
   );
 }
 
+export function StudentDashboardSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-lg px-4 pb-6 pt-4 md:max-w-3xl md:px-6 animate-in fade-in duration-300">
+      {/* Welcome greeting skeleton */}
+      <div className="mb-5 flex flex-col gap-1">
+        <Skeleton className="h-4 w-32 rounded-md" />
+        <Skeleton className="h-8 w-48 rounded-lg mt-1" />
+        <div className="mt-4 flex gap-2">
+          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="h-8.5 w-20 rounded-full" />
+        </div>
+      </div>
+      
+      {/* Attendance summary card skeleton */}
+      <div className="mb-5">
+        <Skeleton className="h-28 w-full rounded-3xl" />
+      </div>
+
+      {/* Legend header skeleton */}
+      <Skeleton className="h-5 w-40 rounded-md mb-2.5" />
+      
+      {/* Legend items skeleton */}
+      <div className="mb-4 flex gap-4">
+        <Skeleton className="h-5 w-16 rounded-md" />
+        <Skeleton className="h-5 w-16 rounded-md" />
+        <Skeleton className="h-5 w-16 rounded-md" />
+      </div>
+
+      {/* Attendance calendar skeleton */}
+      <CalendarSkeleton />
+
+      {/* Bottom CTA action button skeleton */}
+      <div className="mt-4 flex flex-col items-center">
+        <Skeleton className="h-12 w-full max-w-sm rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
+export function AdminDashboardSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-lg px-4 pb-6 pt-4 md:max-w-3xl md:px-6 animate-in fade-in duration-300">
+      {/* Overview header skeleton */}
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-4 w-28 rounded-md" />
+          <Skeleton className="h-8 w-36 rounded-lg mt-1" />
+        </div>
+        <Skeleton className="h-11 w-28 rounded-full" />
+      </div>
+
+      {/* Overview statistical cards skeleton */}
+      <div className="mb-5">
+        <Skeleton className="h-28 w-full rounded-2xl" />
+      </div>
+
+      {/* Actions grid skeleton */}
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex flex-col items-center gap-3 rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100">
+            <Skeleton className="h-12 w-12 rounded-2xl" />
+            <Skeleton className="h-4 w-20 rounded-md" />
+          </div>
+        ))}
+      </div>
+
+      {/* Daily Attendance Summary Card skeleton */}
+      <div className="mb-6 rounded-2xl bg-white p-5 shadow-[0_2px_16px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col gap-4">
+        <Skeleton className="mx-auto h-5 w-40 rounded-md" />
+        <Skeleton className="h-11 w-full rounded-xl" />
+        <div className="grid grid-cols-3 gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-2">
+              <Skeleton className="h-8 w-12 rounded-md" />
+              <Skeleton className="h-3 w-14 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Activity List skeleton */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-24 rounded-md" />
+          <Skeleton className="h-4 w-12 rounded-md" />
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100">
+            <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
+            <div className="flex-1 flex flex-col gap-2">
+              <Skeleton className="h-4 w-36 rounded-md" />
+              <Skeleton className="h-3 w-48 rounded-md" />
+            </div>
+            <Skeleton className="h-3 w-10 shrink-0 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function MessBillsPageSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-lg px-4 pb-6 pt-4 md:max-w-3xl md:px-6 animate-in fade-in duration-300">
+      <div className="mb-4">
+        <Skeleton className="h-5 w-24 rounded-md mb-2" />
+        <Skeleton className="h-8 w-48 rounded-lg" />
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-48 w-full rounded-2xl" />
+        <Skeleton className="h-48 w-full rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
 

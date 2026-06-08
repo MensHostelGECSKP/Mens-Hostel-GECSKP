@@ -86,6 +86,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       const token = localStorage.getItem("token");
       if (token) {
+        // Synchronously decode token to set initial state and avoid loading flash
+        try {
+          const decoded = JSON.parse(atob(token.split(".")[1]));
+          const initialUser: User = {
+            name: decoded.name || "",
+            email: decoded.email || "",
+            role: decoded.role || "student",
+            userId: decoded.userId || "",
+            ...(decoded.role === "student"
+              ? {
+                  yearOfStudy: decoded.yearOfStudy || "",
+                  roomNumber: decoded.roomNumber || "",
+                }
+              : {}),
+          };
+          setUser(initialUser);
+          setIsLoggedIn(true);
+        } catch (e) {
+          console.error("Failed to parse initial token synchronously:", e);
+        }
+
         // Try to fetch user from server first
         try {
           const response = await api.get('/api/auth/me');
