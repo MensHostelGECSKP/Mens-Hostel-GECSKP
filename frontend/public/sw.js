@@ -114,3 +114,62 @@ async function handleStaticRequest(request) {
     return new Response('Offline resource not found', { status: 404 });
   }
 }
+
+// Push event listener - handle push notifications
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.notification.body,
+      icon: data.notification.icon || '/logo.png',
+      badge: data.notification.badge || '/icon-72.png',
+      vibrate: [100, 50, 100],
+      data: data.notification.data || {},
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.notification.title, options)
+    );
+  } catch (err) {
+    console.error('[Service Worker] Error displaying push notification:', err);
+  }
+});
+
+// Notification click listener - handle deep linking and metric reporting
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  const data = event.notification.data || {};
+  const urlToOpen = new URL(data.url || '/', self.location.origin).href;
+  const metricId = data.metricId;
+  
+  const promiseChain = Promise.all([
+    // 1. Report click metric in background
+    metricId
+      ? fetch(`/api/notifications/metrics/${metricId}/click`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).catch((err) => console.warn('[Service Worker] Click metric report failed:', err))
+      : Promise.resolve(),
+      
+    // 2. Open or focus window
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Find matching client
+      const matchingClient = windowClients.find(
+        (client) => new URL(client.url).origin === self.location.origin
+      );
+      
+      if (matchingClient) {
+        return matchingClient.navigate(urlToOpen).then((client) => client.focus());
+      } else {
+        return clients.openWindow(urlToOpen);
+      }
+    }),
+  ]);
+  
+  event.waitUntil(promiseChain);
+});

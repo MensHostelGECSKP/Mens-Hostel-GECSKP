@@ -18,6 +18,7 @@ import {
   HiHome,
   HiCog6Tooth,
   HiInformationCircle,
+  HiBell,
 } from "react-icons/hi2";
 import ProfileInfoRow from "./ProfileInfoRow";
 
@@ -45,6 +46,14 @@ const quickLinks = [
     icon: HiUserPlus,
     iconBg: "bg-emerald-50",
     iconColor: "text-emerald-600",
+  },
+  {
+    href: "/profile/notification-settings",
+    label: "Notification settings",
+    description: "Manage pushes & alerts",
+    icon: HiBell,
+    iconBg: "bg-amber-50",
+    iconColor: "text-amber-500",
   },
   {
     href: "/dashboard/settings",

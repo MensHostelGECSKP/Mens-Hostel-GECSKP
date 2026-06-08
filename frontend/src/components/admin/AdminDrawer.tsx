@@ -16,6 +16,7 @@ const links = [
   { href: "/dashboard/monthly-report", label: "Monthly Report" },
   { href: "/profile", label: "Profile" },
   { href: "/rules", label: "Rules" },
+  { href: "/whats-new", label: "What's New" },
   { href: "/about", label: "About MH App" },
   { href: "/", label: "Public Home" },
 ];

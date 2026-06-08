@@ -72,6 +72,11 @@ const config = {
   messBillReminderCron: process.env.MESS_BILL_REMINDER_CRON || '0 9 * * *',
   messBillReminderTimezone: process.env.MESS_BILL_REMINDER_TZ || 'Asia/Kolkata',
   messBillUploadMaxMb: parseInt(process.env.MESS_BILL_UPLOAD_MAX_MB || '10', 10),
+
+  // VAPID keys for Web Push
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
+  vapidSubject: process.env.VAPID_SUBJECT || 'mailto:gecskp.menshostel@gmail.com',
 };
 
 module.exports = config;

@@ -60,8 +60,12 @@ export default function ImportUsersPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!isLoggedIn || user?.role !== "admin")) {
-      router.replace("/login");
+    if (!loading) {
+      if (!isLoggedIn) {
+        router.replace("/login");
+      } else if (user?.role !== "admin") {
+        router.replace("/dashboard");
+      }
     }
   }, [loading, isLoggedIn, user?.role, router]);
 

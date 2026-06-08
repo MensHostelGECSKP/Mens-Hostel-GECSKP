@@ -14,6 +14,7 @@ function formatPublicUser(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    notificationPreferences: user.notificationPreferences || { bills: true, announcements: true, system: true },
   };
   if (user.role === 'student') {
     return {
@@ -267,6 +268,25 @@ async function deleteStudentById(userId) {
   await User.findByIdAndDelete(userId);
 }
 
+/**
+ * Update notification preferences for a user
+ */
+async function updateNotificationSettings(userId, settings) {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error('USER_NOT_FOUND');
+  }
+  
+  user.notificationPreferences = {
+    bills: settings.bills !== undefined ? Boolean(settings.bills) : user.notificationPreferences?.bills ?? true,
+    announcements: settings.announcements !== undefined ? Boolean(settings.announcements) : user.notificationPreferences?.announcements ?? true,
+    system: settings.system !== undefined ? Boolean(settings.system) : user.notificationPreferences?.system ?? true,
+  };
+  
+  await user.save();
+  return user;
+}
+
 module.exports = {
   formatPublicUser,
   createTokens,
@@ -280,6 +300,7 @@ module.exports = {
   getAllStudents,
   updateStudentById,
   deleteStudentById,
+  updateNotificationSettings,
 };
 
 

@@ -3,10 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { HiChevronRight, HiCog6Tooth, HiExclamationTriangle, HiInformationCircle } from "react-icons/hi2";
+import { HiChevronRight, HiCog6Tooth, HiExclamationTriangle, HiInformationCircle, HiClipboardDocumentList } from "react-icons/hi2";
 import { AppHeader, PageContainer } from "@/components/ui";
 
 const systemLinks = [
+  {
+    href: "/dashboard/settings/checklist",
+    label: "Release Checklist",
+    description: "Verify operational modules and check integration statuses",
+    icon: HiClipboardDocumentList,
+    destructive: false,
+  },
   {
     href: "/dashboard/settings/year-end-reset",
     label: "Year-End Reset",

@@ -14,6 +14,11 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'inactive', 'blocked'],
     default: 'active',
   },
+  notificationPreferences: {
+    bills: { type: Boolean, default: true },
+    announcements: { type: Boolean, default: true },
+    system: { type: Boolean, default: true },
+  },
   resetPasswordToken: { type: String, required: false },
   resetPasswordExpires: { type: Date, required: false },
 }, { timestamps: true });

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,12 +7,31 @@ import { validateEmail, validatePassword } from "@/utils/validation";
 import { useForm } from "@/utils/useForm";
 import { useCreateUser } from "@/hooks/useApi";
 import Spinner from "@/components/Spinner";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CreateUserPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const nameInputRef = useRef<HTMLInputElement>(null);
   const createUserMutation = useCreateUser();
+  const { user, isLoggedIn, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!isLoggedIn) {
+        router.replace("/login");
+      } else if (user?.role !== "admin") {
+        router.replace("/dashboard");
+      }
+    }
+  }, [loading, isLoggedIn, user?.role, router]);
+
+  // Focus name input on mount
+  useEffect(() => {
+    if (isLoggedIn && user?.role === "admin") {
+      nameInputRef.current?.focus();
+    }
+  }, [isLoggedIn, user?.role]);
 
   // useForm hook
   const {
@@ -41,19 +60,22 @@ export default function CreateUserPage() {
       return errs;
     },
     onSubmit: async (vals) => {
-    try {
-      await createUserMutation.mutateAsync(vals);
-      setTimeout(() => router.push("/dashboard"), 2000);
-    } catch (err: unknown) {
+      try {
+        await createUserMutation.mutateAsync(vals);
+        setTimeout(() => router.push("/dashboard"), 2000);
+      } catch (err: unknown) {
         console.error(err);
       }
     },
   });
 
-  // Focus name input on mount
-  React.useEffect(() => {
-    nameInputRef.current?.focus();
-  }, []);
+  if (loading) {
+    return <Spinner className="min-h-[50vh]" />;
+  }
+
+  if (!isLoggedIn || user?.role !== "admin") {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-pink-50 px-2 py-6">

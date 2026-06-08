@@ -287,7 +287,7 @@ export function useCreateNotification() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: { title: string; message?: string; pdfUrl?: string; type?: string }) => {
+    mutationFn: async (data: { title: string; message?: string; pdfUrl?: string; type?: string; sendPush?: boolean }) => {
       const response = await api.post('/api/notifications', data);
       if (response.error) throw new Error(response.error);
       return response.data;
@@ -389,5 +389,79 @@ export function useAuditLogs(page: number = 1, limit: number = 50) {
       return response.data as AuditLogsResponse;
     },
     staleTime: 5000,
+  });
+}
+
+export function useVapidPublicKey() {
+  return useQuery<string>({
+    queryKey: ['vapidPublicKey'] as const,
+    queryFn: async () => {
+      const response = await api.get<{ publicKey: string }>('/api/notifications/vapid-public-key');
+      if (response.error) throw new Error(response.error);
+      return response.data?.publicKey ?? '';
+    },
+    staleTime: Infinity,
+  });
+}
+
+export function useSubscribePush() {
+  return useMutation({
+    mutationFn: async (subscription: any) => {
+      const response = await api.post('/api/notifications/subscribe', subscription);
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+  });
+}
+
+export function useUnsubscribePush() {
+  return useMutation({
+    mutationFn: async (endpoint: string) => {
+      const response = await api.post('/api/notifications/unsubscribe', { endpoint });
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+  });
+}
+
+export function useUpdateNotificationSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { bills: boolean; announcements: boolean; system: boolean }) => {
+      const response = await api.put('/api/auth/notification-settings', data);
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
+    },
+  });
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.put(`/api/notifications/${id}/read`, {});
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const response = await api.post('/api/notifications/read-all', {});
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
   });
 }

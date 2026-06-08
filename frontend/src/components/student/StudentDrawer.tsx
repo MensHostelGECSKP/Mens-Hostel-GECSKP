@@ -11,6 +11,7 @@ import {
   HiArrowRightOnRectangle,
   HiDocumentText,
   HiInformationCircle,
+  HiSparkles,
 } from "react-icons/hi2";
 import { appConfig } from "../../constants/appConfig";
 import { MdRestaurant } from "react-icons/md";
@@ -27,6 +28,7 @@ const links = [
   { href: "/notifications", label: "Notifications", icon: HiBell },
   { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
   { href: "/profile", label: "Profile", icon: HiUser },
+  { href: "/whats-new", label: "What's New", icon: HiSparkles },
   { href: "/about", label: "About", icon: HiInformationCircle },
 ];
 

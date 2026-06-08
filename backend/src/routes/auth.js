@@ -21,6 +21,7 @@ const {
   getAllUsers,
   updateUser,
   deleteUser,
+  updateNotificationSettings,
 } = require('../controllers/authController');
 
 const router = express.Router();
@@ -54,6 +55,9 @@ router.get('/me', auth, getCurrentUser);
 
 // Logout endpoint
 router.post('/logout', logout);
+
+// Update user notification settings
+router.put('/notification-settings', auth, updateNotificationSettings);
 
 // Get all users (admin only)
 router.get('/users', auth, adminOnly, getAllUsers);

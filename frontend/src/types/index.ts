@@ -8,6 +8,11 @@ export type User = {
   yearOfStudy?: string;
   roomNumber?: string;
   status?: UserStatus;
+  notificationPreferences?: {
+    bills: boolean;
+    announcements: boolean;
+    system: boolean;
+  };
 };
 
 export type AttendanceRecord = {
@@ -63,4 +68,6 @@ export type Notification = {
   messBillId?: string;
   userId?: string | null;
   createdAt: string;
+  isRead?: boolean;
+  isDeleted?: boolean;
 };

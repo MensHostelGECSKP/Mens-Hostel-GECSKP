@@ -248,6 +248,24 @@ async function deleteUser(req, res, next) {
   }
 }
 
+/**
+ * Update notification preferences for the logged in user
+ */
+async function updateNotificationSettings(req, res, next) {
+  try {
+    const userId = req.user.userId || req.user._id;
+    const { bills, announcements, system } = req.body;
+    const user = await authService.updateNotificationSettings(userId, { bills, announcements, system });
+    
+    res.json({
+      message: 'Notification settings updated successfully',
+      user: authService.formatPublicUser(user),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -259,5 +277,6 @@ module.exports = {
   getAllUsers,
   updateUser,
   deleteUser,
+  updateNotificationSettings,
 };
 

@@ -10,6 +10,22 @@ interface ApiResponse<T = unknown> {
   message?: string;
 }
 
+function cleanErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    const msg = err.message.toLowerCase();
+    if (
+      msg.includes("failed to fetch") ||
+      msg.includes("fetch failed") ||
+      msg.includes("network error") ||
+      msg.includes("networkerror")
+    ) {
+      return "Unable to load data. Please try again.";
+    }
+    return err.message;
+  }
+  return "Unable to load data. Please try again.";
+}
+
 class ApiClient {
   private baseURL: string;
   private isRefreshing = false;
@@ -206,7 +222,7 @@ class ApiClient {
     } catch (err: unknown) {
       console.error('API request failed:', err);
       return {
-        error: err instanceof Error ? err.message : 'Network error',
+        error: cleanErrorMessage(err),
       };
     }
   }
@@ -294,7 +310,7 @@ class ApiClient {
     } catch (err: unknown) {
       console.error('API upload failed:', err);
       return {
-        error: err instanceof Error ? err.message : 'Network error',
+        error: cleanErrorMessage(err),
       };
     }
   }
@@ -352,7 +368,7 @@ class ApiClient {
     } catch (err: unknown) {
       console.error('Bill file access failed:', err);
       return {
-        error: err instanceof Error ? err.message : 'Network error',
+        error: cleanErrorMessage(err),
       };
     }
   }

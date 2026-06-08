@@ -20,6 +20,8 @@ import {
   HiShieldCheck,
   HiCog6Tooth,
   HiArrowLeft,
+  HiEnvelope,
+  HiPhone,
 } from "react-icons/hi2";
 import { MdRestaurant, MdOutlineAnalytics } from "react-icons/md";
 
@@ -219,6 +221,83 @@ export default function AboutPage() {
                   </div>
                 );
               })}
+            </div>
+          </motion.section>
+
+          {/* Support & Contact Information */}
+          <motion.section variants={itemVariants} aria-labelledby="support-heading">
+            <h3 id="support-heading" className="mb-3 px-1 text-xs font-bold uppercase tracking-wider text-gray-400">
+              Support & Contact
+            </h3>
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col gap-4">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                For operational concerns, disputes regarding attendance/mess cuts, or billing issues, please contact the hostel administration or representatives.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 border-t border-gray-50">
+                {/* Warden Contact */}
+                <div className="flex flex-col justify-between p-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900">Mr. Jamshad Ali</h4>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mt-0.5">Hostel Warden</p>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href="mailto:wardenmh@gecskp.ac.in?subject=MH%20App%20Support%20Request"
+                      className="flex-1 flex min-h-[32px] items-center justify-center gap-1 rounded-lg bg-white border border-gray-200 text-[11px] font-semibold text-gray-700 shadow-xs hover:bg-gray-50 active:scale-98"
+                    >
+                      <HiEnvelope className="h-3.5 w-3.5 text-gray-400" />
+                      Email
+                    </a>
+                    <a
+                      href="tel:+919846272290"
+                      className="flex-1 flex min-h-[32px] items-center justify-center gap-1 rounded-lg bg-white border border-gray-200 text-[11px] font-semibold text-gray-700 shadow-xs hover:bg-gray-50 active:scale-98"
+                    >
+                      <HiPhone className="h-3.5 w-3.5 text-gray-400" />
+                      Call
+                    </a>
+                  </div>
+                </div>
+
+                {/* Clerk Contact */}
+                <div className="flex flex-col justify-between p-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900">Rathul</h4>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide mt-0.5">Hostel Clerk</p>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href="mailto:mh@gecskp.ac.in?subject=MH%20App%20Support%20Request"
+                      className="flex-1 flex min-h-[32px] items-center justify-center gap-1 rounded-lg bg-white border border-gray-200 text-[11px] font-semibold text-gray-700 shadow-xs hover:bg-gray-50 active:scale-98"
+                    >
+                      <HiEnvelope className="h-3.5 w-3.5 text-gray-400" />
+                      Email
+                    </a>
+                    <a
+                      href="tel:+919745401226"
+                      className="flex-1 flex min-h-[32px] items-center justify-center gap-1 rounded-lg bg-white border border-gray-200 text-[11px] font-semibold text-gray-700 shadow-xs hover:bg-gray-50 active:scale-98"
+                    >
+                      <HiPhone className="h-3.5 w-3.5 text-gray-400" />
+                      Call
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-indigo-50/30 border border-indigo-100/50 rounded-xl flex items-center justify-between gap-4 mt-1">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs font-bold text-indigo-950">Developer Support</h4>
+                  <p className="text-[10px] text-indigo-600/90 mt-0.5 font-medium leading-normal">
+                    Submit bug reports, feature suggestions, or application diagnostics directly.
+                  </p>
+                </div>
+                <a
+                  href="mailto:gecskp.menshostel@gmail.com?subject=MH%20App%20Bug%20Report/Feedback"
+                  className="flex shrink-0 min-h-[36px] items-center justify-center rounded-xl bg-[var(--mh-primary)] px-3 text-xs font-bold text-white shadow-xs hover:opacity-95 active:scale-95 transition"
+                >
+                  Report Issue
+                </a>
+              </div>
             </div>
           </motion.section>
 

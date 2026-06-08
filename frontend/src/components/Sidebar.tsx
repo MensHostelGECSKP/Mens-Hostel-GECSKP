@@ -16,6 +16,7 @@ import {
   HiCog6Tooth,
   HiArrowLeftOnRectangle,
   HiInformationCircle,
+  HiSparkles,
 } from "react-icons/hi2";
 import { MdRestaurant } from "react-icons/md";
 import { appConfig } from "../constants/appConfig";
@@ -27,6 +28,7 @@ const navLinks = [
   { href: "/mess-bill", label: "Mess Bill", icon: HiDocumentText },
   { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
   { href: "/notifications", label: "Notifications", icon: HiBell },
+  { href: "/whats-new", label: "What's New", icon: HiSparkles },
   { href: "/about", label: "About MH App", icon: HiInformationCircle },
 ];
 
@@ -46,6 +48,7 @@ const studentDesktopLinks = [
   { href: "/notifications", label: "Notifications", icon: HiBell },
   { href: "/rules", label: "Rules", icon: HiClipboardDocumentList },
   { href: "/profile", label: "Profile", icon: HiUser },
+  { href: "/whats-new", label: "What's New", icon: HiSparkles },
   { href: "/about", label: "About", icon: HiInformationCircle },
 ];
 
@@ -59,6 +62,7 @@ const adminDesktopLinks = [
   { href: "/dashboard/create-user", label: "Create User", icon: HiUserPlus },
   { href: "/dashboard/monthly-report", label: "Monthly Report", icon: HiDocumentText },
   { href: "/dashboard/audit-logs", label: "Audit Logs", icon: HiClipboardDocumentList },
+  { href: "/whats-new", label: "What's New", icon: HiSparkles },
   { href: "/about", label: "About", icon: HiInformationCircle },
 ];
 
