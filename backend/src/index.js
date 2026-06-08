@@ -9,6 +9,7 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
 const config = require('./config');
+const version = require('./constants/version');
 const { setCsrfToken, getCsrfToken } = require('./middleware/csrf');
 const { errorHandler } = require('./middleware/errorHandler');
 const { sanitizeBody } = require('./utils/sanitize');
@@ -86,7 +87,7 @@ app.use('/api', apiLimiter);
 
 // Test route
 app.get('/', (req, res) => {
-  res.send('Mess Management API is running!');
+  res.send(`Mess Management API v${version} is running!`);
 });
 
 // CSRF token endpoint (GET only, no CSRF protection needed)

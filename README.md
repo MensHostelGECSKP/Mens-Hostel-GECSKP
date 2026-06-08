@@ -1,84 +1,126 @@
-# Mess Management Web App for Men's Hostel
+# MH App v2.0.1 — Mess Management Web App
 
 ## Overview
-A modern, full-stack web application for managing hostel mess attendance, meal cuts, and billing, designed for Government Engineering College Palakkad (Men's Hostel).
-
-## Tech Stack
-- Frontend: Next.js (React, TypeScript), Tailwind CSS
-- Backend: Node.js, Express, MongoDB, JWT Auth
-
-## Features
-- Student and Admin roles
-- Mess cut tracking with calendar interface
-- Meal selection and absence marking
-- Monthly reporting and billing
-- Admin dashboard for user and announcement management
-
-## Getting Started
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-#### Backend Environment Variables
-
-Create a `.env` file in the `backend` directory with the following variables:
-
-**Required:**
-- `MONGODB_URI` - MongoDB connection string
-- `JWT_SECRET` - Secret key for JWT access tokens
-- `JWT_REFRESH_SECRET` - Secret key for JWT refresh tokens (must be different from JWT_SECRET)
-
-**Optional (with defaults):**
-- `PORT` - Server port (default: 5000)
-- `NODE_ENV` - Environment mode: 'development' or 'production' (default: 'development')
-- `FRONTEND_URL` - Frontend URL(s), comma-separated for multiple (default: 'http://localhost:3000')
-- `EMAIL_USER` - Email address for sending password reset emails
-- `EMAIL_PASS` - Email password/app password
-- `JWT_ACCESS_TOKEN_EXPIRY` - Access token expiration (default: '15m')
-- `JWT_REFRESH_TOKEN_EXPIRY` - Refresh token expiration (default: '7d')
-- `ATTENDANCE_DEADLINE_HOUR` - Hour (UTC) when attendance deadline passes (default: 19)
-- `ATTENDANCE_WINDOW_DAYS` - Number of days in advance attendance can be marked (default: 7)
-- `RATE_LIMIT_WINDOW_MS` - Rate limit window in milliseconds (default: 900000 = 15 minutes)
-- `RATE_LIMIT_MAX` - Max requests per window for general routes (default: 100)
-- `AUTH_RATE_LIMIT_MAX` - Max requests per window for auth routes (default: 10)
-- `ATTENDANCE_RATE_LIMIT_MAX` - Max requests per window for attendance routes (default: 20)
-- `JSON_BODY_LIMIT` - Maximum JSON body size (default: '1mb')
-
-**Mess bill uploads (Cloudflare R2):**
-
-- `R2_ACCOUNT_ID` - Cloudflare account ID
-- `R2_ACCESS_KEY_ID` - R2 API token access key
-- `R2_SECRET_ACCESS_KEY` - R2 API token secret
-- `R2_BUCKET_NAME` - R2 bucket name (e.g. `mh-mess-bills`)
-- `R2_PRESIGNED_URL_EXPIRY` - Seconds before view/download links expire (default: 300)
-- `MESS_BILL_STORAGE_PROVIDER` - `r2` (production) or `local` (dev without R2)
-- `MESS_BILL_STORAGE_DIR` - Local fallback directory when provider is `local` (default: `uploads/mess-bills`)
-- `MESS_BILL_UPLOAD_MAX_MB` - Max upload size in MB (default: 10)
-- `MESS_BILL_REMINDER_CRON` - Cron schedule for due-date reminders (default: `0 9 * * *`)
-- `MESS_BILL_REMINDER_TZ` - Timezone for reminders (default: `Asia/Kolkata`)
-
-#### Cloudflare R2 setup (mess bills)
-
-1. In the [Cloudflare dashboard](https://dash.cloudflare.com/), open **R2** and create a bucket (e.g. `mh-mess-bills`).
-2. Create an **R2 API token** with read/write access to that bucket.
-3. Add `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME` to `backend/.env`.
-4. Files are stored under `mess-bills/YYYY/MM/` in the bucket. MongoDB stores metadata; students receive short-lived presigned URLs through the backend.
-5. For local development without R2, omit the R2 variables — the backend falls back to local disk storage automatically.
-
-## Logo
-Add your college logo to `frontend/public/` and update the layout as needed.
+A modern, full-stack, and PWA-enabled web application for managing hostel mess attendance, meal cuts, notifications, and billing, designed specifically for the Government Engineering College Sreekrishnapuram (GECSKP) Men's Hostel.
 
 ---
 
-For detailed documentation, see the respective `frontend/` and `backend/` folders. 
+## 🚀 Key Features
+
+* **Student Module**:
+  * Visual calendar dashboard for logging mess cuts (absence marking) for specific meals (Morning, Noon, Night).
+  * Real-time attendance statistics (Present Days calculation).
+  * Mess bills view and payment status marking.
+  * Localized in-app notifications and push updates.
+  * PWA support for mobile homescreen installation and offline mode.
+
+* **Admin Module**:
+  * Centralized management dashboard with real-time operational metrics.
+  * Student user account management, including bulk imports via Excel spreadsheets.
+  * Mess bill publishing and automated Asia/Kolkata due date reminders.
+  * Automated database and storage cleaning via the Year-End Reset utility.
+  * PDF and Excel reports generation for mess cuts and monthly reviews.
+  * Complete audit logs tracking system state mutations.
+
+* **Google Drive Integration**:
+  * Automatically uploads mess bill PDFs to Google Drive using the Google Drive API.
+  * Organizes files dynamically by Year and Month folders (e.g. `MH App Bills/2026/June/`).
+  * Features secure document link sharing and automated cleanup pipelines.
+
+* **Authentication & Security**:
+  * Double Submit Cookie pattern CSRF protection.
+  * Secure JWT authentication using HttpOnly Refresh Cookies.
+  * Dynamic SameSite production configuration for seamless cross-site hosting.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend**: Next.js 16 (React 19, TypeScript), Tailwind CSS 4, React Query v5
+* **Backend**: Node.js, Express, MongoDB (Mongoose ODM), Web-Push
+* **File Storage**: Google Drive API (via automated oauth2 refresh flow)
+* **Design**: HSL CSS color systems, modern typography (Manrope), smooth micro-animations
+
+---
+
+## ⚙️ Environment Variables (`backend/.env`)
+
+Create a `.env` file in the `backend/` directory:
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `MONGODB_URI` | **Yes** | — | MongoDB Atlas / local connection string |
+| `JWT_SECRET` | **Yes** | — | Signing secret for access tokens |
+| `JWT_REFRESH_SECRET` | **Yes** | — | Signing secret for HttpOnly refresh cookies |
+| `PORT` | No | `5000` | Port for Express server |
+| `NODE_ENV` | No | `development` | Environment mode (`development` or `production`) |
+| `FRONTEND_URL` | No | `http://localhost:3000` | CORS permitted origins (comma-separated list) |
+| `EMAIL_USER` | No | — | Gmail / SMTP email for sending password resets |
+| `EMAIL_PASS` | No | — | Gmail App password (2-Step Verification required) |
+| `MESS_BILL_STORAGE_PROVIDER` | No | `local` | Storage provider (`google-drive` or `local`) |
+| `GOOGLE_CLIENT_ID` | Conditional | — | Google OAuth Client ID (required for `google-drive`) |
+| `GOOGLE_CLIENT_SECRET` | Conditional | — | Google OAuth Client Secret (required for `google-drive`) |
+| `GOOGLE_REDIRECT_URI` | No | Playground | OAuth redirect URI (default: google oauth playground) |
+| `GOOGLE_REFRESH_TOKEN` | Conditional | — | Google OAuth Refresh Token (required for `google-drive`) |
+| `MESS_BILL_REMINDER_TZ` | No | `Asia/Kolkata` | Timezone for due date reminders |
+| `ATTENDANCE_DEADLINE_HOUR` | No | `19` | UTC Hour of the previous day to lock marking (19:00 UTC = 12:30 AM IST) |
+| `ATTENDANCE_WINDOW_DAYS` | No | `7` | Days in advance attendance can be logged |
+| `VAPID_PUBLIC_KEY` | No | — | Web Push VAPID public key (auto-generated in dev if blank) |
+| `VAPID_PRIVATE_KEY` | No | — | Web Push VAPID private key (auto-generated in dev if blank) |
+| `VAPID_SUBJECT` | No | mailto | VAPID contact email header |
+
+---
+
+## 📦 Getting Started
+
+### 1. Installation
+
+Install dependencies in both directories:
+```bash
+# Install frontend packages
+cd frontend
+npm install
+
+# Install backend packages
+cd ../backend
+npm install
+```
+
+### 2. Running Locally
+
+Start the development environments:
+```bash
+# Run backend server (starts on port 5000)
+cd backend
+npm run dev
+
+# Run frontend Next.js dev server (starts on port 3000)
+cd frontend
+npm run dev
+```
+
+Visit `http://localhost:3000` to access the application.
+
+---
+
+## 📈 Bulk User Import
+
+To onboard students in bulk, admins can import an Excel spreadsheet (.xlsx) from the **Settings / Manage Users** panel. 
+
+The sheet must contain the following columns in row 1:
+1. **Name**: The full name of the student.
+2. **Email**: The unique student email address (used for logging in).
+3. **Room Number**: Hostel room number (e.g. `104`).
+4. **Year**: Year of study (e.g. `1`, `2`, `3`, `4`).
+
+*Note: The script automatically generates secure default passwords and dispatches them directly to the students' registered emails on successful import.*
+
+---
+
+## 🧹 Academic Year-End Reset
+
+The **Year-End Reset** cleans up database operational data to prepare the system for the next academic year.
+* **Deleted data**: Student accounts, attendance calendars, mess cut records, notification logs, bill payments.
+* **Preserved data**: Admin credentials, audit log history, system settings.
+* **Google Drive option**: If checked, the script recursively purges the `MH App Bills` directory in the configured Google Drive account.
+* **Auxiliary collection sweeps**: Purges related push subscription endpoints, metrics, and notification states to prevent database bloat.

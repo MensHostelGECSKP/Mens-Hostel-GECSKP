@@ -1,76 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MH App v2.0.1 — Frontend (Next.js)
 
-## Getting Started
+This directory contains the user interface of the hostel mess management application built using **Next.js 16**, **React 19**, and **Tailwind CSS 4**.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🛠️ Technology Stack
+
+* **Framework**: Next.js 16 (App Router)
+* **Library**: React 19
+* **State Management & Caching**: TanStack React Query v5
+* **Styling**: Tailwind CSS 4 (using CSS-based `@import "tailwindcss"` configuration)
+* **PDF Reports**: `jspdf` & `jspdf-autotable`
+* **Icons**: `react-icons/hi2` (Heroicons)
+* **Animations**: `framer-motion`
+
+---
+
+## ⚙️ Local Environment Configuration (`.env.local`)
+
+Create a `.env.local` file in this directory with the following variables:
+
+```env
+# URL pointing to the backend API server
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+
+# Window constraints matching backend configuration (in days)
+NEXT_PUBLIC_ATTENDANCE_WINDOW_DAYS=7
+
+# UTC hour representing daily mark lock (e.g. 19 = 19:00 UTC / 12:30 AM IST)
+NEXT_PUBLIC_ATTENDANCE_DEADLINE_HOUR=19
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Development Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-## Learn More
+### 2. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Production Build
+Build the optimized bundle:
+```bash
+npm run build
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📱 Progressive Web App (PWA) Support
 
-## Deploy on Vercel
+This application is configured as a installable PWA for mobile devices:
+* **Service Worker** (`public/sw.js`): Handles network-first caching strategies for shell pages and static resources.
+* **Manifest** (`public/manifest.json`): Configures color tokens, app icons, and screen layout behaviors.
+* **Offline Page** (`public/offline.html`): Displayed if the device is offline and requested page isn't in cache.
+* **PWA Register** (`components/PWARegistration.tsx`): Programmatically handles service worker installation and registers click metrics.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📂 Key UI Components
 
-## Setup Instructions
+* **AttendanceCalendar** (`src/components/AttendanceCalendar.tsx`): Renders the student and admin calendar layout using UTC-exact date math.
+* **Sidebar** (`src/components/Sidebar.tsx`): Desktop navigation links with dynamic roles support (`student` or `admin`).
+* **SettingsView** (`src/components/admin/settings/SettingsView.tsx`): Direct access to the release checklist and year-end database reset views.
+* **StudentDashboard** (`src/components/student/StudentDashboard.tsx`): Displays present days, attendance summaries, and mess calendars with pull-to-refresh action.
 
-### Frontend
-1. Install dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
-2. Create a `.env.local` file and set any required environment variables (see `.env.example`).
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
+---
 
-### Backend
-1. Install dependencies:
-   ```bash
-   cd backend
-   npm install
-   ```
-2. Create a `.env` file and set your MongoDB URI and JWT secret (see `.env.example`).
-3. Run the backend server:
-   ```bash
-   npm start
-   ```
+## 🏷️ Version Config
 
-## API Documentation
-
-- The backend exposes RESTful endpoints for authentication and attendance management.
-- Example endpoints:
-  - `POST /api/auth/login`
-  - `POST /api/auth/register`
-  - `POST /api/auth/forgot-password`
-  - `POST /api/auth/reset-password/:token`
-  - `GET /api/attendance/month?userId=...&month=YYYY-MM`
-
-## Screenshots
-
-_
+The frontend version number is centrally defined at [appConfig.ts](file:///c:/Learn%20Webdevelopment/MH%20App/frontend/src/constants/appConfig.ts). All pages, PDFs, and drawer footers inherit their version and build indicators from this metadata object.
