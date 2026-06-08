@@ -333,8 +333,8 @@ async function deleteMessBill(id) {
 /**
  * Remove all mess bill files from storage (year-end reset).
  */
-async function removeAllStoredFiles() {
-  await messBillStorage.removeAllFiles();
+async function removeAllStoredFiles(options = {}) {
+  await messBillStorage.removeAllFiles(options);
 }
 
 module.exports = {

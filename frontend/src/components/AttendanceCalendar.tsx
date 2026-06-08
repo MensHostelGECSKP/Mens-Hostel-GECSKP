@@ -93,17 +93,30 @@ export default function AttendanceCalendar({
 
   const isMarkable = (dateStr: string) => {
     const now = new Date();
-    const todayMid = new Date();
-    todayMid.setHours(0, 0, 0, 0);
+    
+    // Parse target dateStr as UTC midnight (matching the backend's parseISO("YYYY-MM-DDT00:00:00Z"))
     const [y, m, d] = dateStr.split("-").map(Number);
-    const dayDate = new Date(y, m - 1, d);
-    dayDate.setHours(0, 0, 0, 0);
-    const deadline = new Date(dayDate);
-    deadline.setDate(dayDate.getDate() - 1);
-    deadline.setHours(ATTENDANCE_DEADLINE_HOUR, 0, 0, 0);
-    const windowFromNow = new Date(todayMid);
-    windowFromNow.setDate(todayMid.getDate() + ATTENDANCE_WINDOW_DAYS);
-    return now <= deadline && dayDate >= todayMid && dayDate <= windowFromNow;
+    const requestedDate = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+    
+    // Calculate deadline matching backend (19:00 UTC of previous day)
+    const deadline = new Date(requestedDate);
+    deadline.setUTCDate(deadline.getUTCDate() - 1);
+    deadline.setUTCHours(ATTENDANCE_DEADLINE_HOUR, 0, 0, 0);
+    
+    // Calculate window matching backend (todayUTC - 1 day to todayUTC + windowDays)
+    const todayUTC = new Date(now);
+    todayUTC.setUTCHours(0, 0, 0, 0);
+    
+    const minDate = new Date(todayUTC);
+    minDate.setUTCDate(minDate.getUTCDate() - 1);
+    
+    const maxDate = new Date(todayUTC);
+    maxDate.setUTCDate(maxDate.getUTCDate() + ATTENDANCE_WINDOW_DAYS);
+    
+    const isBeforeDeadline = now <= deadline;
+    const isWithinWindow = requestedDate >= minDate && requestedDate <= maxDate;
+    
+    return isBeforeDeadline && isWithinWindow;
   };
 
   const loading = isLoading || markAttendanceMutation.isPending;

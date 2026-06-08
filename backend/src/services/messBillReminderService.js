@@ -1,28 +1,43 @@
-const { addDays, startOfDay, endOfDay, isSameDay } = require('date-fns');
-const { toZonedTime } = require('date-fns-tz');
+const { toZonedTime, fromZonedTime } = require('date-fns-tz');
 const MessBill = require('../models/MessBill');
 const MessBillPayment = require('../models/MessBillPayment');
 const notificationService = require('./notificationService');
 const { formatBillMonthLabel, formatDueDate } = require('../utils/messBillFormat');
 const config = require('../config');
 
-function todayInTimezone() {
+/**
+ * Get the target day's UTC boundaries (startOfDay and endOfDay) relative to a timezone.
+ * This function is completely host-server-timezone independent.
+ */
+function getZonedStartAndEnd(offsetDays, timeZone) {
   const now = new Date();
-  return startOfDay(toZonedTime(now, config.messBillReminderTimezone));
+  const zonedNow = toZonedTime(now, timeZone);
+
+  const targetZonedDate = new Date(zonedNow);
+  targetZonedDate.setDate(targetZonedDate.getDate() + offsetDays);
+
+  const targetZonedStart = new Date(targetZonedDate);
+  targetZonedStart.setHours(0, 0, 0, 0);
+
+  const targetZonedEnd = new Date(targetZonedDate);
+  targetZonedEnd.setHours(23, 59, 59, 999);
+
+  const startUTC = fromZonedTime(targetZonedStart, timeZone);
+  const endUTC = fromZonedTime(targetZonedEnd, timeZone);
+
+  return { startUTC, endUTC };
 }
 
 /**
  * Process reminders for bills due in exactly `daysBefore` days.
  */
 async function processRemindersForOffset(daysBefore, reminderField, type, titlePrefix) {
-  const today = todayInTimezone();
-  const targetDue = addDays(today, daysBefore);
-  const targetDueStart = startOfDay(targetDue);
-  const targetDueEnd = endOfDay(targetDue);
+  const timeZone = config.messBillReminderTimezone || 'Asia/Kolkata';
+  const { startUTC, endUTC } = getZonedStartAndEnd(daysBefore, timeZone);
 
   const bills = await MessBill.find({
     isPublished: true,
-    dueDate: { $gte: targetDueStart, $lte: targetDueEnd },
+    dueDate: { $gte: startUTC, $lte: endUTC },
   });
   let sent = 0;
 

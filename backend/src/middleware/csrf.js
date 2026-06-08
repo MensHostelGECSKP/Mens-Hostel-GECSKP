@@ -34,10 +34,11 @@ function setCsrfToken(req, res, next) {
   // Only set if not already present
   if (!req.cookies['csrf-token']) {
     const token = generateCsrfToken();
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('csrf-token', token, {
       httpOnly: false, // Must be readable by JavaScript for Double Submit Cookie pattern
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
     req.csrfToken = token;
@@ -53,10 +54,11 @@ function getCsrfToken(req, res) {
   
   // Set cookie if not already set
   if (!req.cookies['csrf-token']) {
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('csrf-token', token, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000
     });
   }

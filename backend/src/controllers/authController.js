@@ -40,11 +40,11 @@ async function login(req, res, next) {
     const { accessToken, refreshToken } = authService.createTokens(user);
     
     // Set refresh token as HttpOnly cookie
-    const config = require('../config');
+    const isProd = config.nodeEnv === 'production';
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: config.nodeEnv === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
     
@@ -178,7 +178,12 @@ async function getCurrentUser(req, res, next) {
  * Logout user
  */
 function logout(req, res) {
-  res.clearCookie('refreshToken');
+  const isProd = config.nodeEnv === 'production';
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+  });
   res.json({ message: 'Logged out successfully' });
 }
 

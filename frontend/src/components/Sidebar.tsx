@@ -62,6 +62,7 @@ const adminDesktopLinks = [
   { href: "/dashboard/create-user", label: "Create User", icon: HiUserPlus },
   { href: "/dashboard/monthly-report", label: "Monthly Report", icon: HiDocumentText },
   { href: "/dashboard/audit-logs", label: "Audit Logs", icon: HiClipboardDocumentList },
+  { href: "/dashboard/settings", label: "Settings", icon: HiCog6Tooth },
   { href: "/whats-new", label: "What's New", icon: HiSparkles },
   { href: "/about", label: "About", icon: HiInformationCircle },
 ];

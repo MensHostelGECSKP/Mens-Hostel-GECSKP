@@ -4,6 +4,9 @@ const Attendance = require('../models/Attendance');
 const MessBill = require('../models/MessBill');
 const MessBillPayment = require('../models/MessBillPayment');
 const Notification = require('../models/Notification');
+const UserNotificationState = require('../models/UserNotificationState');
+const NotificationMetric = require('../models/NotificationMetric');
+const PushSubscription = require('../models/PushSubscription');
 const messBillService = require('./messBillService');
 const { getAcademicYearLabel } = require('../utils/academicYear');
 
@@ -46,12 +49,23 @@ async function deleteStoredFilesForBills(deleteDriveFiles) {
 
 async function deleteOperationalData(deleteDriveFiles, session) {
   const opts = session ? { session } : {};
+
+  // Retrieve student IDs before deleting them to clean up associated push subscriptions
+  const students = await User.find({ role: 'student' }, '_id', opts);
+  const studentIds = students.map((s) => s._id);
+
   await deleteStoredFilesForBills(deleteDriveFiles);
   const attendanceResult = await Attendance.deleteMany({}, opts);
   const paymentResult = await MessBillPayment.deleteMany({}, opts);
   const messBillResult = await MessBill.deleteMany({}, opts);
   const notificationResult = await Notification.deleteMany({}, opts);
   const studentResult = await User.deleteMany({ role: 'student' }, opts);
+
+  // Wiping auxiliary collections to prevent orphan references
+  await UserNotificationState.deleteMany({}, opts);
+  await NotificationMetric.deleteMany({}, opts);
+  await PushSubscription.deleteMany({ userId: { $in: studentIds } }, opts);
+
   return {
     residents: studentResult.deletedCount,
     attendance: attendanceResult.deletedCount,
