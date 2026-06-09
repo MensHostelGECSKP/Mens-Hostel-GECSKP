@@ -57,6 +57,7 @@ export type MessBill = {
   uploadedAt?: string;
   isPublished?: boolean;
   paymentStatus?: MessBillPaymentStatus | null;
+  status?: 'paid' | 'unpaid';
 };
 
 export type Notification = {
