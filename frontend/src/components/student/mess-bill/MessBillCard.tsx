@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { HiOutlineExternalLink, HiOutlineDocumentDownload } from "react-icons/hi";
+import { HiOutlineExternalLink, HiOutlineDocumentDownload, HiOutlineCreditCard } from "react-icons/hi";
 import type { MessBill } from "@/types";
 import { formatBillMonthLabel, formatDueDate, isExcelBill } from "@/utils/messBillDisplay";
 import { useUpdateMessBillPayment } from "@/hooks/useApi";
 import { api } from "@/utils/api";
 import MarkBillPaidDialog from "./MarkBillPaidDialog";
+import PayBillDialog from "./PayBillDialog";
 
 type MessBillCardProps = {
   bill: MessBill;
@@ -16,6 +17,7 @@ type MessBillCardProps = {
 export default function MessBillCard({ bill }: MessBillCardProps) {
   const updatePayment = useUpdateMessBillPayment();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
 
   const isPaid = bill.paymentStatus?.isPaid ?? false;
   const label = formatBillMonthLabel(bill.month, bill.year);
@@ -130,22 +132,39 @@ export default function MessBillCard({ bill }: MessBillCardProps) {
       </div>
 
       {isPaid ? (
-        <button
-          type="button"
-          onClick={handleMarkUnpaid}
-          disabled={updatePayment.isPending}
-          className="w-full text-center text-sm font-medium text-gray-500 underline-offset-2 hover:text-[var(--mh-primary)] hover:underline disabled:opacity-50"
-        >
-          Mark as Unpaid
-        </button>
+        <div className="space-y-3">
+          <div className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-50 text-sm font-semibold text-emerald-700">
+            Paid ✓
+          </div>
+          <button
+            type="button"
+            onClick={handleMarkUnpaid}
+            disabled={updatePayment.isPending}
+            className="w-full text-center text-sm font-medium text-gray-500 underline-offset-2 hover:text-[var(--mh-primary)] hover:underline disabled:opacity-50"
+          >
+            Mark as Unpaid
+          </button>
+        </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setConfirmOpen(true)}
-          className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 hover:bg-gray-50"
-        >
-          Mark as Paid
-        </button>
+        <div className="flex flex-col gap-2">
+          {bill.status === "unpaid" && (
+            <button
+              type="button"
+              onClick={() => setPayOpen(true)}
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white active-press"
+            >
+              <HiOutlineCreditCard className="h-5 w-5" />
+              Pay Bill
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 hover:bg-gray-50 active-press"
+          >
+            Mark as Paid
+          </button>
+        </div>
       )}
 
       <MarkBillPaidDialog
@@ -154,6 +173,12 @@ export default function MessBillCard({ bill }: MessBillCardProps) {
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleMarkPaid}
         isPending={updatePayment.isPending}
+      />
+
+      <PayBillDialog
+        bill={bill}
+        open={payOpen}
+        onClose={() => setPayOpen(false)}
       />
     </article>
   );

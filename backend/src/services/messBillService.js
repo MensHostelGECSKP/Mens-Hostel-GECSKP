@@ -22,9 +22,11 @@ function attachFileUrls(doc) {
 
 function attachPaymentStatus(bill, payment) {
   const doc = bill.toObject ? bill.toObject() : { ...bill };
+  const isPaid = payment ? payment.isPaid : false;
   doc.paymentStatus = payment
     ? { isPaid: payment.isPaid, paidAt: payment.paidAt || null }
     : { isPaid: false, paidAt: null };
+  doc.status = isPaid ? 'paid' : 'unpaid';
   return attachFileUrls(doc);
 }
 
@@ -218,6 +220,7 @@ async function getMessBillsForUser(user) {
     return bills.map((b) => {
       const doc = b.toObject();
       doc.paymentStatus = null;
+      doc.status = 'unpaid';
       return attachFileUrls(doc);
     });
   }
@@ -241,6 +244,7 @@ async function getMessBillById(id, user) {
   if (user.role === 'admin') {
     const doc = bill.toObject();
     doc.paymentStatus = null;
+    doc.status = 'unpaid';
     return attachFileUrls(doc);
   }
 
