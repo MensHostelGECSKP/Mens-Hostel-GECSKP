@@ -151,7 +151,7 @@ export default function MessBillCard({ bill }: MessBillCardProps) {
             <button
               type="button"
               onClick={() => setPayOpen(true)}
-              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white active-press"
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#22c55e] text-sm font-semibold text-white active-press"
             >
               <HiOutlineCreditCard className="h-5 w-5" />
               Pay Bill

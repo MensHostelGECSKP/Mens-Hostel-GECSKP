@@ -291,9 +291,13 @@ async function updatePaymentStatus(billId, userId, isPaid) {
     throw new Error('NOT_FOUND');
   }
 
-  const payment = await MessBillPayment.findOne({ userId, messBillId: billId });
+  let payment = await MessBillPayment.findOne({ userId, messBillId: billId });
   if (!payment) {
-    throw new Error('NOT_FOUND');
+    payment = new MessBillPayment({
+      userId,
+      messBillId: billId,
+      isPaid: false,
+    });
   }
 
   payment.isPaid = Boolean(isPaid);
