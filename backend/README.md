@@ -61,7 +61,7 @@ backend/
 
 * **Timezone Safety**: The cron job schedules due date checks in India Standard Time (`Asia/Kolkata`) using `date-fns-tz`. Day boundaries are computed in IST and queried on the MongoDB database as timezone-independent UTC timestamps.
 * **Attendance Window**: Students can mark attendance for yesterday, today, and up to `ATTENDANCE_WINDOW_DAYS` in advance.
-* **Attendance Deadline**: Marking for a specific day locks at `ATTENDANCE_DEADLINE_HOUR` UTC on the *previous* calendar day. For instance, a deadline hour of `19` locks attendance marking at 19:00 UTC (12:30 AM IST).
+* **Attendance Deadline**: Marking for a specific day locks at `ATTENDANCE_DEADLINE_HOUR` IST on the *previous* calendar day. For instance, a deadline hour of `19` locks attendance marking at 7:00 PM IST (19:00 IST / 13:30 UTC).
 
 ---
 

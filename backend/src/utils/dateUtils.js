@@ -40,13 +40,14 @@ function startOfDayUTC(date) {
 
 /**
  * Calculate the deadline for marking attendance for a given date
- * Deadline is at ATTENDANCE_DEADLINE_HOUR UTC on the day before the requested date
+ * Deadline is at ATTENDANCE_DEADLINE_HOUR IST (UTC+5:30) on the day before the requested date
  */
 function calculateDeadline(requestedDate, deadlineHour) {
   const deadlineDay = startOfDayUTC(requestedDate);
   const previousDay = subDays(deadlineDay, 1);
-  previousDay.setUTCHours(deadlineHour, 0, 0, 0);
-  return previousDay;
+  // deadlineHour is in IST (UTC+5:30). Convert IST hour on previous day to UTC timestamp.
+  const deadlineMs = previousDay.getTime() + (deadlineHour - 5.5) * 60 * 60 * 1000;
+  return new Date(deadlineMs);
 }
 
 /**

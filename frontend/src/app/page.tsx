@@ -295,16 +295,16 @@ export default function Home() {
                     A
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[13px] font-bold text-gray-950 truncate">Adithyan S R</h3>
+                    <h3 className="text-[13px] font-bold text-gray-950 truncate">Adithyan K</h3>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Hostel Secretary</p>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-1">
                 <a
-                  href="tel:+917736631572"
+                  href="tel:+919539240174"
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 transition active:scale-95"
-                  aria-label="Call Adithyan S R"
+                  aria-label="Call Adithyan K"
                 >
                   <HiPhone className="h-4.5 w-4.5" />
                 </a>

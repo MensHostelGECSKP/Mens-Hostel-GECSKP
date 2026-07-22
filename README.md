@@ -63,7 +63,7 @@ Create a `.env` file in the `backend/` directory:
 | `GOOGLE_REDIRECT_URI` | No | Playground | OAuth redirect URI (default: google oauth playground) |
 | `GOOGLE_REFRESH_TOKEN` | Conditional | — | Google OAuth Refresh Token (required for `google-drive`) |
 | `MESS_BILL_REMINDER_TZ` | No | `Asia/Kolkata` | Timezone for due date reminders |
-| `ATTENDANCE_DEADLINE_HOUR` | No | `19` | UTC Hour of the previous day to lock marking (19:00 UTC = 12:30 AM IST) |
+| `ATTENDANCE_DEADLINE_HOUR` | No | `19` | Hour (in IST) of the previous day to lock marking (19:00 IST = 7:00 PM IST / 13:30 UTC) |
 | `ATTENDANCE_WINDOW_DAYS` | No | `7` | Days in advance attendance can be logged |
 | `VAPID_PUBLIC_KEY` | No | — | Web Push VAPID public key (auto-generated in dev if blank) |
 | `VAPID_PRIVATE_KEY` | No | — | Web Push VAPID private key (auto-generated in dev if blank) |
