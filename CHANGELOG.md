@@ -2,6 +2,11 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
+## [2.0.2] - 2026-07-23
+
+### Fixed
+* **Mess Cut Cutoff Time Logic**: Fixed deadline calculation in backend `dateUtils.js` and frontend `AttendanceCalendar.tsx` to interpret `ATTENDANCE_DEADLINE_HOUR` (default `19` = 7:00 PM) strictly in Indian Standard Time (IST, UTC+5:30) on the previous calendar day instead of UTC, preventing users from marking cuts after 7:00 PM IST.
+
 ---
 
 ## [2.0.1] - 2026-06-08
