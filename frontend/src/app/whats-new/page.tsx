@@ -76,7 +76,7 @@ export default function WhatsNewPage() {
     <>
       <AppHeader
         title="What's New"
-        subtitle="Recent features & improvements in v2.0.1"
+        subtitle={`Recent features & improvements in v${appConfig.version}`}
         showBack={true}
       />
       <PageContainer className="page-transition">
@@ -148,7 +148,7 @@ export default function WhatsNewPage() {
               onClick={() => router.push("/dashboard")}
               className="w-full flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[var(--mh-primary)] text-sm font-semibold text-white shadow-md transition active:scale-[0.96] hover:opacity-95"
             >
-              Get Started with v2.0.1
+              Get Started with v{appConfig.version}
             </button>
             <button
               type="button"

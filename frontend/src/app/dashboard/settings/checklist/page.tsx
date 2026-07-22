@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { AppHeader, PageContainer } from "@/components/ui";
+import { appConfig } from "@/constants/appConfig";
 import { api } from "@/utils/api";
 import FullPageLoader from "@/components/FullPageLoader";
 import {
@@ -200,7 +201,7 @@ export default function ChecklistPage() {
           <div className="rounded-2xl bg-white p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
             <h2 className="text-sm font-semibold text-gray-900 mb-2">Production Readiness Audit</h2>
             <p className="text-xs leading-relaxed text-gray-500">
-              MH App v2.0.1 is in Release Candidate stage. Use this checklist page to manually verify system modules and check automated integrations.
+              MH App v{appConfig.version} is in Release Candidate stage. Use this checklist page to manually verify system modules and check automated integrations.
             </p>
           </div>
 

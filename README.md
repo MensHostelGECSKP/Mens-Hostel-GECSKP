@@ -1,4 +1,4 @@
-# MH App v2.0.1 — Mess Management Web App
+# MH App v2.0.2 — Mess Management Web App
 
 ## Overview
 A modern, full-stack, and PWA-enabled web application for managing hostel mess attendance, meal cuts, notifications, and billing, designed specifically for the Government Engineering College Sreekrishnapuram (GECSKP) Men's Hostel.

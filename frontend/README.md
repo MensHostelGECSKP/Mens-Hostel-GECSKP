@@ -1,4 +1,4 @@
-# MH App v2.0.1 — Frontend (Next.js)
+# MH App v2.0.2 — Frontend (Next.js)
 
 This directory contains the user interface of the hostel mess management application built using **Next.js 16**, **React 19**, and **Tailwind CSS 4**.
 

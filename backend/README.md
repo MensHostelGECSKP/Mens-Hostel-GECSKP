@@ -1,4 +1,4 @@
-# MH App v2.0.1 — Backend (Express API)
+# MH App v2.0.2 — Backend (Express API)
 
 This directory contains the Express REST API server of the hostel mess management application. It handles authentication, attendance marking logic, bill indexing, push notification dispatches, and system resets.
 
