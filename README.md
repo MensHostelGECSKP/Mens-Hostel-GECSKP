@@ -109,11 +109,18 @@ To onboard students in bulk, admins can import an Excel spreadsheet (.xlsx) from
 
 The sheet must contain the following columns in row 1:
 1. **Name**: The full name of the student.
-2. **Email**: The unique student email address (used for logging in).
+2. **Year** or **Year Of Study**: Year of study (e.g. `1`, `2`, `3`, `4`).
 3. **Room Number**: Hostel room number (e.g. `104`).
-4. **Year**: Year of study (e.g. `1`, `2`, `3`, `4`).
+4. **Email**: The unique student email address (used for logging in).
 
-*Note: The script automatically generates secure default passwords and dispatches them directly to the students' registered emails on successful import.*
+Import flow:
+1. The backend validates the full spreadsheet first.
+2. Valid rows are imported one at a time.
+3. After each user is created, the welcome email is attempted immediately before moving to the next row.
+4. Email failures do not stop later rows from being processed.
+5. The completion summary shows imported, skipped, failed, email sent, email failed, and per-row results.
+
+The local Python wrapper uses the same backend import service, so admin UI imports and local imports behave the same way.
 
 ---
 

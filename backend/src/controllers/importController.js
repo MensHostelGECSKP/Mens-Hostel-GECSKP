@@ -96,7 +96,7 @@ async function previewImport(req, res, next) {
  */
 async function executeImport(req, res, next) {
   try {
-    const { users } = req.body;
+    const { users, validationSkippedCount = 0 } = req.body;
 
     if (!users || !Array.isArray(users)) {
       return res.status(400).json({
@@ -106,7 +106,9 @@ async function executeImport(req, res, next) {
     }
 
     // Execute the import using the reusable service
-    const results = await importService.importUsers(users, req);
+    const results = await importService.importUsers(users, req, {
+      skippedCount: validationSkippedCount,
+    });
 
     res.json(results);
   } catch (err) {

@@ -1,9 +1,20 @@
 const XLSX = require('xlsx');
-const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const config = require('../config');
 const { logAuditEvent } = require('../utils/auditLogger');
+
+const SMTP_TRANSIENT_CODES = new Set([
+  'ETIMEDOUT',
+  'ECONNECTION',
+  'ESOCKET',
+  'ECONNRESET',
+  'EAI_AGAIN',
+]);
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * Generates a random password for new accounts.
@@ -184,15 +195,82 @@ async function validateData(rows) {
 }
 
 /**
- * Internal helper to check if a MongoDB error is related to transactions not being supported.
+ * Creates a transporter for welcome emails.
  */
-function isTransactionUnsupportedError(err) {
-  const msg = err?.message || '';
+function createWelcomeEmailTransporter() {
+  return nodemailer.createTransport({
+    host: config.smtpHost,
+    port: config.smtpPort,
+    secure: config.smtpSecure,
+    auth: {
+      user: config.emailUser,
+      pass: config.emailPass,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+  });
+}
+
+function isTransientSmtpError(err) {
+  if (!err) return false;
+  if (SMTP_TRANSIENT_CODES.has(err.code)) return true;
+  if ([421, 450, 451, 452].includes(err.responseCode)) return true;
+  const msg = String(err.message || '').toLowerCase();
   return (
-    msg.includes('replica set') ||
-    msg.includes('Transaction numbers') ||
-    msg.includes('transactions are not supported')
+    msg.includes('timeout') ||
+    msg.includes('temporarily unavailable') ||
+    msg.includes('try again later') ||
+    msg.includes('connection closed')
   );
+}
+
+function formatSmtpError(err) {
+  const parts = [];
+  if (err?.code) parts.push(err.code);
+  if (err?.responseCode) parts.push(`SMTP ${err.responseCode}`);
+  if (err?.message) parts.push(err.message);
+  return parts.join(': ') || 'SMTP error';
+}
+
+async function sendWelcomeEmail(transporter, user, loginUrl) {
+  const mailOptions = {
+    from: `"MH App" <${config.emailUser}>`,
+    to: user.email,
+    subject: 'Your Hostel Mess App Account Created',
+    text: [
+      `Hello ${user.name},`,
+      '',
+      'Your mess account has been created successfully.',
+      `Name: ${user.name}`,
+      `Year: ${user.yearOfStudy}`,
+      `Room: ${user.roomNumber || 'N/A'}`,
+      `Email: ${user.email}`,
+      `Password: ${user.plainPassword}`,
+      '',
+      `Please log in at ${loginUrl} using these credentials.`,
+    ].join('\n'),
+  };
+
+  const maxAttempts = 3;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await transporter.sendMail(mailOptions);
+      return { ok: true };
+    } catch (err) {
+      lastError = err;
+      if (!isTransientSmtpError(err) || attempt === maxAttempts) {
+        break;
+      }
+      await delay(250 * attempt);
+    }
+  }
+
+  const error = new Error(formatSmtpError(lastError));
+  error.originalError = lastError;
+  throw error;
 }
 
 /**
@@ -201,104 +279,97 @@ function isTransactionUnsupportedError(err) {
 async function sendWelcomeEmails(users) {
   if (!config.emailUser || !config.emailPass) {
     console.warn('[import-service] EMAIL_USER / EMAIL_PASS not set — skipping welcome emails.');
-    return;
+    return {
+      sent: 0,
+      failed: 0,
+      skipped: users.length,
+      failures: [],
+    };
   }
 
-  const transporter = nodemailer.createTransport({
-    host: config.smtpHost,
-    port: config.smtpPort,
-    secure: config.smtpSecure,
-    auth: {
-      user: config.emailUser,
-      pass: config.emailPass,
-    },
-  });
+  const transporter = createWelcomeEmailTransporter();
 
   const frontendUrls = config.frontendUrl.split(',').map((s) => s.trim()).filter(Boolean);
   const loginUrl = frontendUrls[0] || 'http://localhost:3000';
 
+  let sent = 0;
+  let failed = 0;
+  const failures = [];
+
   for (const user of users) {
+    console.info(`[import-service] Sending welcome email to ${user.email}`);
     try {
-      await transporter.sendMail({
-        from: `"MH App" <${config.emailUser}>`,
-        to: user.email,
-        subject: 'Your Hostel Mess App Account Created',
-        text: [
-          `Hello ${user.name},`,
-          '',
-          'Your mess account has been created successfully.',
-          `Name: ${user.name}`,
-          `Year: ${user.yearOfStudy}`,
-          `Room: ${user.roomNumber || 'N/A'}`,
-          `Email: ${user.email}`,
-          `Password: ${user.plainPassword}`,
-          '',
-          `Please log in at ${loginUrl} using these credentials.`,
-        ].join('\n'),
-      });
+      await sendWelcomeEmail(transporter, user, loginUrl);
+      sent += 1;
+      console.info(`[import-service] Welcome email sent to ${user.email}`);
     } catch (err) {
+      failed += 1;
+      failures.push({
+        email: user.email,
+        error: err.message,
+      });
       console.error(`[import-service] Failed to send welcome email to ${user.email}:`, err.message);
     }
   }
-}
-
-/**
- * Imports valid rows into the database (supports MongoDB Transactions).
- */
-async function importUsers(validRows, req = null, useTransaction = true) {
-  if (!validRows || validRows.length === 0) {
-    return { successfullyImported: 0, failed: 0, errors: [] };
-  }
-
-  if (useTransaction) {
-    const session = await mongoose.startSession();
-    try {
-      session.startTransaction();
-      const results = await executeInsert(validRows, req, session);
-      await session.commitTransaction();
-      
-      // Asynchronously send emails after successful commit
-      sendWelcomeEmails(results.createdUsers).catch(console.error);
-
-      return {
-        successfullyImported: results.createdUsers.length,
-        failed: 0,
-        errors: [],
-      };
-    } catch (err) {
-      if (session.inTransaction()) {
-        await session.abortTransaction();
-      }
-      if (!isTransactionUnsupportedError(err)) {
-        throw err;
-      }
-      console.warn('[import-service] Transactions unsupported; falling back to non-transactional import');
-    } finally {
-      session.endSession();
-    }
-  }
-
-  // Fallback: non-transactional inserts
-  const results = await executeInsert(validRows, req);
-  sendWelcomeEmails(results.createdUsers).catch(console.error);
 
   return {
-    successfullyImported: results.createdUsers.length,
-    failed: results.failedCount,
-    errors: results.errors,
+    sent,
+    failed,
+    skipped: 0,
+    failures,
   };
 }
 
 /**
- * Performs actual DB insertions of user records.
+ * Imports valid rows into the database sequentially.
  */
-async function executeInsert(validRows, req, session = null) {
-  const opts = session ? { session } : {};
-  const createdUsers = [];
-  const errors = [];
-  let failedCount = 0;
+async function importUsers(validRows, req = null, useTransactionOrOptions = true) {
+  const options = typeof useTransactionOrOptions === 'object' && useTransactionOrOptions !== null
+    ? useTransactionOrOptions
+    : {};
+  const validationSkippedCount = Number(options.skippedCount || 0);
 
-  for (const row of validRows) {
+  if (!validRows || validRows.length === 0) {
+    return {
+      totalRows: validationSkippedCount,
+      importedCount: 0,
+      skippedCount: validationSkippedCount,
+      failedCount: 0,
+      durationMs: 0,
+      emailStats: { sent: 0, failed: 0, skipped: validationSkippedCount },
+      rowResults: [],
+      createdUsers: [],
+      successfullyImported: 0,
+      failed: 0,
+      errors: [],
+      emailFailures: [],
+    };
+  }
+
+  const startedAt = Date.now();
+  const createdUsers = [];
+  const rowResults = [];
+  const errors = [];
+  const emailFailures = [];
+  let failedCount = 0;
+  let emailSentCount = 0;
+  let emailFailedCount = 0;
+
+  const frontendUrls = config.frontendUrl.split(',').map((s) => s.trim()).filter(Boolean);
+  const loginUrl = frontendUrls[0] || 'http://localhost:3000';
+  const emailEnabled = Boolean(config.emailUser && config.emailPass);
+  const transporter = emailEnabled ? createWelcomeEmailTransporter() : null;
+
+  console.info('[import-service] Import Started');
+  console.info(`[import-service] Rows: ${validRows.length}`);
+  if (validationSkippedCount > 0) {
+    console.info(`[import-service] Validation skipped rows: ${validationSkippedCount}`);
+  }
+  console.info('[import-service] Validation Passed');
+
+  for (let index = 0; index < validRows.length; index += 1) {
+    const row = validRows[index];
+    const rowLabel = `${index + 1}/${validRows.length}`;
     const plainPassword = generatePassword();
     const user = new User({
       name: row.name.trim(),
@@ -310,8 +381,9 @@ async function executeInsert(validRows, req, session = null) {
       status: 'active',
     });
 
+    console.info(`[import-service] Creating user ${rowLabel}: ${user.email}`);
     try {
-      await user.save(opts);
+      await user.save();
       createdUsers.push({
         _id: user._id,
         name: user.name,
@@ -333,9 +405,46 @@ async function executeInsert(validRows, req, session = null) {
           roomNumber: user.roomNumber,
           imported: true,
         },
-        user._id,
-        session
+        user._id
       );
+
+      let emailStatus = 'skipped';
+      let emailError = '';
+      if (emailEnabled) {
+        console.info(`[import-service] Sending welcome email ${rowLabel}: ${user.email}`);
+        try {
+          await sendWelcomeEmail(transporter, createdUsers[createdUsers.length - 1], loginUrl);
+          emailSentCount += 1;
+          emailStatus = 'sent';
+          console.info(`[import-service] Welcome email sent ${rowLabel}: ${user.email}`);
+        } catch (err) {
+          emailFailedCount += 1;
+          emailStatus = 'failed';
+          emailError = err.message;
+          emailFailures.push({
+            rowNumber: row.rowNumber,
+            email: user.email,
+            error: err.message,
+          });
+          console.error(`[import-service] Failed to send welcome email to ${user.email}:`, err.message);
+        }
+      }
+
+      rowResults.push({
+        rowNumber: row.rowNumber,
+        name: user.name,
+        email: user.email,
+        status: 'imported',
+        message: emailStatus === 'sent'
+          ? 'Imported and welcome email sent'
+          : emailStatus === 'failed'
+            ? 'Imported, but welcome email failed'
+            : 'Imported; welcome email skipped',
+        emailStatus,
+        emailError: emailError || undefined,
+      });
+
+      console.info(`[import-service] Processed ${rowLabel}: imported`);
     } catch (err) {
       failedCount++;
       errors.push({
@@ -343,14 +452,44 @@ async function executeInsert(validRows, req, session = null) {
         email: row.email,
         error: err.message,
       });
-      // In transactional mode, this throw triggers abortion and rolls back all inserts
-      if (session) {
-        throw err;
-      }
+      rowResults.push({
+        rowNumber: row.rowNumber,
+        name: row.name,
+        email: row.email,
+        status: 'failed',
+        message: err.message,
+        emailStatus: 'skipped',
+      });
+      console.error(`[import-service] Failed to create user ${rowLabel}: ${row.email}`, err.message);
     }
   }
 
-  return { createdUsers, failedCount, errors };
+  const durationMs = Date.now() - startedAt;
+  const summary = {
+    totalRows: validRows.length + validationSkippedCount,
+    importedCount: createdUsers.length,
+    skippedCount: validationSkippedCount,
+    failedCount,
+    durationMs,
+    emailStats: {
+      sent: emailSentCount,
+      failed: emailFailedCount,
+      skipped: emailEnabled ? 0 : createdUsers.length,
+    },
+    rowResults,
+    createdUsers,
+    successfullyImported: createdUsers.length,
+    failed: failedCount + validationSkippedCount,
+    errors,
+    emailFailures,
+  };
+
+  console.info('[import-service] Import Complete');
+  console.info(
+    `[import-service] Imported: ${summary.importedCount}, Skipped: ${summary.skippedCount}, Failed: ${summary.failedCount}, Emails Sent: ${summary.emailStats.sent}, Emails Failed: ${summary.emailStats.failed}, Duration: ${Math.round(durationMs / 1000)} seconds`
+  );
+
+  return summary;
 }
 
 module.exports = {
