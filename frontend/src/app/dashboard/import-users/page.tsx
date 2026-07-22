@@ -37,6 +37,25 @@ interface PreviewData {
 }
 
 interface ImportResult {
+  totalRows: number;
+  importedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  durationMs: number;
+  emailStats: {
+    sent: number;
+    failed: number;
+    skipped: number;
+  };
+  rowResults: Array<{
+    rowNumber: number;
+    name: string;
+    email: string;
+    status: 'imported' | 'failed';
+    message: string;
+    emailStatus: 'sent' | 'failed' | 'skipped';
+    emailError?: string;
+  }>;
   successfullyImported: number;
   failed: number;
   errors: Array<{ rowNumber: number; email: string; error: string }>;
@@ -60,6 +79,8 @@ export default function ImportUsersPage() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [executing, setExecuting] = useState(false);
+  const [progressVal, setProgressVal] = useState(0);
+  const [progressMax, setProgressMax] = useState(0);
 
   useEffect(() => {
     if (!loading) {
@@ -172,28 +193,72 @@ export default function ImportUsersPage() {
     setExecuting(true);
     setShowConfirmModal(false);
     setStep("importing");
-    setStatusMessage("Adding users to the database and sending welcome emails...");
+    
+    const totalToProcess = previewData.validRows.length;
+    setProgressMax(totalToProcess);
+    setProgressVal(0);
+    setStatusMessage(`Preparing to onboard ${totalToProcess} users...`);
+
+    const aggregatedResult: ImportResult = {
+      totalRows: previewData.totalRows,
+      importedCount: 0,
+      skippedCount: previewData.invalidRowsCount,
+      failedCount: 0,
+      durationMs: 0,
+      emailStats: {
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+      },
+      rowResults: [],
+      successfullyImported: 0,
+      failed: previewData.invalidRowsCount,
+      errors: [],
+    };
+
+    const BATCH_SIZE = 3;
+    const startTime = Date.now();
 
     try {
-      const res = await api.post<ImportResult>("/api/system/import/execute", {
-        users: previewData.validRows,
-      });
+      for (let i = 0; i < totalToProcess; i += BATCH_SIZE) {
+        const chunk = previewData.validRows.slice(i, i + BATCH_SIZE);
+        const currentBatchStart = i + 1;
+        const currentBatchEnd = Math.min(i + BATCH_SIZE, totalToProcess);
+        setStatusMessage(`Onboarding users ${currentBatchStart} to ${currentBatchEnd} of ${totalToProcess}...`);
 
-      if (res.error) {
-        toast.error(res.error);
-        setStep("preview");
-      } else if (res.data) {
-        // Stats
-        setImportResult({
-          successfullyImported: res.data.successfullyImported,
-          failed: res.data.failed + previewData.invalidRowsCount,
-          errors: res.data.errors || [],
+        const res = await api.post<ImportResult>("/api/system/import/execute", {
+          users: chunk,
+          validationSkippedCount: 0,
         });
-        toast.success("Users successfully onboarded!");
-        setStep("result");
+
+        if (res.error) {
+          throw new Error(res.error);
+        }
+
+        if (res.data) {
+          const chunkData = res.data;
+          aggregatedResult.importedCount += chunkData.importedCount;
+          aggregatedResult.failedCount += chunkData.failedCount;
+          aggregatedResult.emailStats.sent += chunkData.emailStats.sent;
+          aggregatedResult.emailStats.failed += chunkData.emailStats.failed;
+          aggregatedResult.emailStats.skipped += chunkData.emailStats.skipped;
+          aggregatedResult.rowResults.push(...chunkData.rowResults);
+          aggregatedResult.successfullyImported += chunkData.successfullyImported;
+          aggregatedResult.failed += chunkData.failed;
+          if (chunkData.errors) {
+            aggregatedResult.errors.push(...chunkData.errors);
+          }
+        }
+
+        setProgressVal(currentBatchEnd);
       }
-    } catch (err) {
-      toast.error("An error occurred during import execution.");
+
+      aggregatedResult.durationMs = Date.now() - startTime;
+      setImportResult(aggregatedResult);
+      toast.success("Users successfully onboarded!");
+      setStep("result");
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred during import execution.");
       setStep("preview");
     } finally {
       setExecuting(false);
@@ -206,6 +271,8 @@ export default function ImportUsersPage() {
     setStatusMessage("");
     setPreviewData(null);
     setImportResult(null);
+    setProgressVal(0);
+    setProgressMax(0);
     setStep("upload");
     setExecuting(false);
     if (fileInputRef.current) {
@@ -474,6 +541,21 @@ export default function ImportUsersPage() {
             <HiArrowPath className="h-12 w-12 text-[var(--mh-primary)] animate-spin mb-4" />
             <h3 className="text-lg font-semibold text-gray-800">Importing Users</h3>
             <p className="text-sm text-gray-500 mt-2 max-w-md leading-relaxed">{statusMessage}</p>
+            
+            {progressMax > 0 && (
+              <div className="w-full max-w-md mt-6">
+                <div className="flex justify-between text-xs font-semibold text-gray-600 mb-2">
+                  <span>Progress</span>
+                  <span>{progressVal} of {progressMax} ({Math.round((progressVal / progressMax) * 100)}%)</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden border border-gray-200/50">
+                  <div 
+                    className="bg-[var(--mh-primary)] h-full transition-all duration-300 ease-out" 
+                    style={{ width: `${(progressVal / progressMax) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -489,37 +571,69 @@ export default function ImportUsersPage() {
             <div className="flex flex-col items-center">
               <HiCheckCircle className="h-16 w-16 text-emerald-500 mb-2 animate-bounce" />
               <h2 className="text-xl font-bold text-gray-800">Onboarding Complete</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Bulk user import completed successfully.</p>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Users were created sequentially and each welcome email was attempted immediately after creation.
+              </p>
             </div>
 
             {/* Results breakdown */}
-            <div className="bg-gray-50 rounded-2xl p-5 max-w-sm mx-auto grid grid-cols-2 gap-4 border border-gray-100">
-              <div className="text-center border-r border-gray-200">
-                <span className="block text-2xl font-extrabold text-emerald-600">
-                  {importResult.successfullyImported}
-                </span>
+            <div className="bg-gray-50 rounded-2xl p-5 max-w-3xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 border border-gray-100">
+              <div className="text-center md:border-r md:border-gray-200">
+                <span className="block text-2xl font-extrabold text-gray-800">{importResult.totalRows}</span>
+                <span className="text-xs font-semibold text-gray-500 mt-0.5">Total</span>
+              </div>
+              <div className="text-center md:border-r md:border-gray-200">
+                <span className="block text-2xl font-extrabold text-emerald-600">{importResult.importedCount}</span>
                 <span className="text-xs font-semibold text-gray-500 mt-0.5">Imported</span>
               </div>
+              <div className="text-center md:border-r md:border-gray-200">
+                <span className="block text-2xl font-extrabold text-amber-600">{importResult.skippedCount}</span>
+                <span className="text-xs font-semibold text-gray-500 mt-0.5">Skipped</span>
+              </div>
               <div className="text-center">
-                <span className="block text-2xl font-extrabold text-gray-600">
-                  {importResult.failed}
-                </span>
-                <span className="text-xs font-semibold text-gray-500 mt-0.5">Failed/Skipped</span>
+                <span className="block text-2xl font-extrabold text-rose-500">{importResult.failedCount}</span>
+                <span className="text-xs font-semibold text-gray-500 mt-0.5">Failed</span>
               </div>
             </div>
 
-            {/* Write Errors if any */}
-            {importResult.errors.length > 0 && (
-              <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-left max-w-md mx-auto space-y-2">
-                <span className="font-semibold text-amber-800 text-xs flex items-center gap-1.5">
-                  <HiExclamationTriangle className="h-4 w-4" />
-                  Database Registration Warnings:
+            <div className="bg-white rounded-2xl p-4 max-w-3xl mx-auto grid grid-cols-3 gap-4 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+              <div className="text-center">
+                <span className="block text-xl font-bold text-emerald-600">{importResult.emailStats.sent}</span>
+                <span className="text-xs font-semibold text-gray-500">Emails Sent</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-xl font-bold text-rose-500">{importResult.emailStats.failed}</span>
+                <span className="text-xs font-semibold text-gray-500">Emails Failed</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-xl font-bold text-gray-700">{Math.round(importResult.durationMs / 1000)}</span>
+                <span className="text-xs font-semibold text-gray-500">Seconds</span>
+              </div>
+            </div>
+
+            {importResult.rowResults.length > 0 && (
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 text-left max-w-3xl mx-auto space-y-2 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+                <span className="font-semibold text-gray-800 text-xs flex items-center gap-1.5">
+                  <HiDocumentText className="h-4 w-4" />
+                  Row Results
                 </span>
-                <div className="max-h-36 overflow-y-auto space-y-1">
-                  {importResult.errors.map((err, idx) => (
-                    <span key={idx} className="block text-[11px] text-amber-700">
-                      Row {err.rowNumber} ({err.email}): {err.error}
-                    </span>
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                  {importResult.rowResults.map((row) => (
+                    <div key={row.rowNumber} className="flex flex-col gap-1 rounded-xl border border-gray-100 p-3 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-gray-800">Row {row.rowNumber} · {row.name}</span>
+                        <span className={`rounded-full px-2 py-0.5 font-semibold ${row.status === 'imported' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                          {row.status === 'imported' ? 'Imported' : 'Failed'}
+                        </span>
+                      </div>
+                      <div className="text-gray-500">{row.email}</div>
+                      <div className="text-gray-600">{row.message}</div>
+                      {row.emailStatus !== 'skipped' && (
+                        <div className="text-gray-500">
+                          Email: {row.emailStatus === 'sent' ? 'Sent' : `Failed${row.emailError ? ` - ${row.emailError}` : ''}`}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>

@@ -74,6 +74,25 @@ The mess bill files are saved automatically onto Google Drive by setting `MESS_B
 
 ---
 
+## 📈 Bulk User Import
+
+The bulk import flow is shared by the admin UI and the local Python wrapper through the same backend service.
+
+Template columns in row 1:
+1. **Name**
+2. **Year** or **Year Of Study**
+3. **Room Number**
+4. **Email**
+
+Workflow:
+1. Validate the full Excel file before inserting any users.
+2. Create users sequentially without a long-running MongoDB transaction.
+3. Send each welcome email immediately after its user is created.
+4. Continue processing later rows even if one row or one email fails.
+5. Return row-level import results plus email sent and email failed counts.
+
+---
+
 ## 🚀 Running the API Server
 
 ### 1. Configure `.env`
