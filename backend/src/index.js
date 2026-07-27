@@ -4,9 +4,11 @@
 const dns = require('dns');
 // Use public DNS resolvers (Google & Cloudflare) to ensure SRV record queries for MongoDB Atlas succeed
 try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
+  if (dns && typeof dns.setServers === 'function') {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  }
 } catch (e) {
-  // Ignore if custom servers cannot be set
+  // Safe fallback if custom DNS servers cannot be set
 }
 
 const express = require('express');
@@ -43,7 +45,23 @@ async function connectToMongoDB() {
       messBillReminderJobStarted = true;
     }
   } catch (err) {
-    console.error('MongoDB connection error:', err);
+    console.error('MongoDB connection error:', err.message || err);
+
+    if (
+      err.name === 'MongooseServerSelectionError' ||
+      (err.message && (err.message.includes('whitelisted') || err.message.includes('IP') || err.message.includes('connect')))
+    ) {
+      console.error(
+        '\n========================================================================\n' +
+        '[DB DIAGNOSTIC] MongoDB Atlas IP Access List Warning:\n' +
+        'MongoDB Atlas rejected the connection. If you removed 0.0.0.0/0 from Atlas:\n' +
+        '1. Open MongoDB Atlas (https://cloud.mongodb.com)\n' +
+        '2. Navigate to Security -> Network Access\n' +
+        '3. Add 0.0.0.0/0 (Allow Access from Anywhere) for cloud/Render deployments\n' +
+        '   or add your current local public IP address for local development.\n' +
+        '========================================================================\n'
+      );
+    }
 
     if (shouldFailFastOnDbError) {
       process.exit(1);

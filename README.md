@@ -131,3 +131,11 @@ The **Year-End Reset** cleans up database operational data to prepare the system
 * **Preserved data**: Admin credentials, audit log history, system settings.
 * **Google Drive option**: If checked, the script recursively purges the `MH App Bills` directory in the configured Google Drive account.
 * **Auxiliary collection sweeps**: Purges related push subscription endpoints, metrics, and notification states to prevent database bloat.
+
+---
+
+## 🔒 MongoDB Atlas Network Access & IP Whitelisting
+
+If you encounter `MongooseServerSelectionError` or IP Whitelist connection errors (e.g. after removing `0.0.0.0/0`):
+1. **Cloud Deployments (Render / Vercel / Heroku)**: Outbound server IPs change dynamically. On [MongoDB Atlas](https://cloud.mongodb.com), go to **Security -> Network Access**, click **Add IP Address**, and select **Allow Access from Anywhere (`0.0.0.0/0`)**. Security is maintained via robust MongoDB user authentication and strong password credentials.
+2. **Local Development**: Add your local machine's current public IP address to the Atlas Network Access whitelist, or keep `0.0.0.0/0` enabled during local development.
