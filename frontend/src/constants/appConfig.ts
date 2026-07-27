@@ -36,7 +36,15 @@ export const appConfig: AppConfig = {
       version: "v2.0.2",
       releaseDate: "July 2026",
       changes: [
-        "Fixed mess cut deadline calculation to strictly enforce cutoff hour in Indian Standard Time (IST)",
+        "Fixed mess cut deadline to strictly enforce cutoff hour in Indian Standard Time (IST)",
+        "Fixed attendance window boundary — no more off-by-one during 12:00 AM–5:30 AM IST",
+        "Fixed input sanitization — names with apostrophes (D'Souza), URLs, and passwords no longer get corrupted",
+        "Fixed Login page React Hooks ordering issue",
+        "Mess bill uploads now automatically fall back to local storage if Google Drive fails",
+        "Admins can now manually trigger payment reminders from the dashboard",
+        "Payment records auto-sync for active students when a new bill is published",
+        "MongoDB Atlas IP whitelist errors now show a clear diagnostic message at startup",
+        "Dependency security updates across the full stack",
       ],
     },
     {

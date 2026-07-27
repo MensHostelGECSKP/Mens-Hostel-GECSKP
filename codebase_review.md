@@ -62,7 +62,7 @@ MH App/
 │       ├── config/index.js       # Env validation + centralized config
 │       ├── constants/
 │       │   ├── errors.js         # ERROR_MESSAGES, ERROR_CODES
-│       │   └── version.js        # Centralized version source of truth ('2.0.1')
+│       │   └── version.js        # Centralized version source of truth ('2.0.2')
 │       ├── controllers/          # HTTP handlers (thin)
 │       ├── services/             # Business logic + DB
 │       ├── routes/               # Route definitions + rate limits + validators
@@ -83,7 +83,7 @@ MH App/
         ├── providers/QueryProvider.tsx
         ├── types/index.ts
         ├── constants/
-        │   └── appConfig.ts      # Centralized frontend version ('2.0.1')
+        │   └── appConfig.ts      # Centralized frontend version ('2.0.2')
         └── utils/                # api.ts, attendanceStats, logger, validation
 ```
 
@@ -159,12 +159,12 @@ MH App/
 4. `setCsrfToken` — sets `csrf-token` cookie if missing
 5. `cors` (credentials, `X-CSRF-Token` header allowed)
 6. `express.json` (size from config)
-7. `sanitizeBody` — strips/escapes all `req.body` strings recursively
+7. `sanitizeBody` — strips control characters from all `req.body` strings recursively (does **not** HTML-entity-encode)
 8. `rateLimit` on `/api/*`
 9. Routes (see [API Reference](#6-api-reference))
 10. `errorHandler` (last)
 
-**Health:** `GET /` → `"Mess Management API v2.0.1 is running!"`
+**Health:** `GET /` → `"Mess Management API v2.0.2 is running!"`
 
 ### 5.2 Layer Pattern
 

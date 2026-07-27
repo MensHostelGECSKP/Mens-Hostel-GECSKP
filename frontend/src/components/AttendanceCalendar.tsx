@@ -103,14 +103,19 @@ export default function AttendanceCalendar({
     previousDay.setUTCDate(previousDay.getUTCDate() - 1);
     const deadline = new Date(previousDay.getTime() + (ATTENDANCE_DEADLINE_HOUR - 5.5) * 60 * 60 * 1000);
     
-    // Calculate window matching backend (todayUTC - 1 day to todayUTC + windowDays)
-    const todayUTC = new Date(now);
-    todayUTC.setUTCHours(0, 0, 0, 0);
+    // Compute "today" anchored to the IST calendar date, mirroring backend getISTToday().
+    // During 12:00 AM–5:30 AM IST the raw UTC clock still reads the previous day, which
+    // would incorrectly shrink the max-markable window by one day. Adding +5:30 before
+    // truncating to the calendar date fixes this.
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+    const istNow = new Date(now.getTime() + IST_OFFSET_MS);
+    const istDateStr = istNow.toISOString().slice(0, 10); // "YYYY-MM-DD" in IST
+    const todayIST = new Date(`${istDateStr}T00:00:00Z`);
     
-    const minDate = new Date(todayUTC);
+    const minDate = new Date(todayIST);
     minDate.setUTCDate(minDate.getUTCDate() - 1);
     
-    const maxDate = new Date(todayUTC);
+    const maxDate = new Date(todayIST);
     maxDate.setUTCDate(maxDate.getUTCDate() + ATTENDANCE_WINDOW_DAYS);
     
     const isBeforeDeadline = now <= deadline;
@@ -118,6 +123,7 @@ export default function AttendanceCalendar({
     
     return isBeforeDeadline && isWithinWindow;
   };
+
 
   const loading = isLoading || markAttendanceMutation.isPending;
 
