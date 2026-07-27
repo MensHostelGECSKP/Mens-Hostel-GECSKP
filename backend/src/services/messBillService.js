@@ -35,6 +35,81 @@ async function findExistingBill(month, year) {
 }
 
 /**
+ * Helper to ensure all active students have a MessBillPayment record for a bill.
+ */
+async function syncMessBillPayments(messBillId) {
+  const activeStudents = await User.find({ role: 'student', status: 'active' }).select('_id');
+  if (activeStudents.length === 0) return;
+
+  const existingPayments = await MessBillPayment.find({ messBillId }).select('userId');
+  const existingUserIds = new Set(existingPayments.map((p) => p.userId.toString()));
+
+  const missingPayments = activeStudents
+    .filter((s) => !existingUserIds.has(s._id.toString()))
+    .map((s) => ({
+      userId: s._id,
+      messBillId,
+      isPaid: false,
+    }));
+
+  if (missingPayments.length > 0) {
+    await MessBillPayment.insertMany(missingPayments);
+  }
+}
+
+/**
+ * Helper to save bill file with automatic fallback to local storage if Google Drive fails.
+ */
+async function saveFileWithFallback({ file, storageKey, month, year }) {
+  const warnings = [];
+  let uploadResult;
+  let usedProvider = messBillStorage.name;
+
+  try {
+    uploadResult = await messBillStorage.saveFile({
+      buffer: file.buffer,
+      storageKey,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      month,
+      year,
+    });
+  } catch (err) {
+    console.error('[mess-bill] Primary storage upload failed:', err.message);
+    if (messBillStorage.name === 'google-drive') {
+      console.warn(
+        '\n========================================================================\n' +
+        '[STORAGE FALLBACK] Google Drive upload failed (' + err.message + ').\n' +
+        'Automatically saving file to local storage as fallback.\n' +
+        'To fix Google Drive: Renew GOOGLE_REFRESH_TOKEN in backend/.env or set MESS_BILL_STORAGE_PROVIDER=local.\n' +
+        '========================================================================\n'
+      );
+      try {
+        const localProvider = getStorageProviderByName('local');
+        uploadResult = await localProvider.saveFile({
+          buffer: file.buffer,
+          storageKey,
+          fileName: file.originalname,
+          mimeType: file.mimetype,
+          month,
+          year,
+        });
+        usedProvider = 'local';
+        warnings.push('google_drive_failed_saved_locally');
+      } catch (fallbackErr) {
+        console.error('[mess-bill] Local storage fallback also failed:', fallbackErr.message);
+        throw new Error('STORAGE_UPLOAD_FAILED');
+      }
+    } else {
+      throw new Error('STORAGE_UPLOAD_FAILED');
+    }
+  }
+
+  const newStorageKey = typeof uploadResult === 'string' ? uploadResult : uploadResult.storageKey;
+  return { uploadResult, newStorageKey, usedProvider, warnings };
+}
+
+/**
  * Publish a new mess bill: upload to storage, save metadata, payments, broadcast notification.
  */
 async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace }) {
@@ -65,33 +140,23 @@ async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace
       mimeType: file.mimetype,
     });
 
-    let uploadResult;
-    try {
-      uploadResult = await messBillStorage.saveFile({
-        buffer: file.buffer,
-        storageKey,
-        fileName: file.originalname,
-        mimeType: file.mimetype,
-        month,
-        year,
-      });
-    } catch (err) {
-      console.error('[mess-bill] Storage upload failed:', err.message);
-      throw new Error('STORAGE_UPLOAD_FAILED');
-    }
-
-    const newStorageKey = typeof uploadResult === 'string' ? uploadResult : uploadResult.storageKey;
+    const { uploadResult, newStorageKey, usedProvider, warnings } = await saveFileWithFallback({
+      file,
+      storageKey,
+      month,
+      year,
+    });
 
     existing.fileName = file.originalname;
     existing.storageKey = newStorageKey;
     existing.mimeType = file.mimetype;
     existing.fileSize = file.buffer.length;
-    existing.storageProvider = messBillStorage.name;
+    existing.storageProvider = usedProvider;
     existing.uploadedBy = uploadedBy;
     existing.uploadedAt = new Date();
     existing.dueDate = dueDate;
 
-    if (messBillStorage.name === 'google-drive') {
+    if (usedProvider === 'google-drive') {
       existing.fileId = uploadResult.fileId;
       existing.viewUrl = uploadResult.viewUrl;
       existing.downloadUrl = uploadResult.downloadUrl;
@@ -102,10 +167,10 @@ async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace
     }
 
     await existing.save();
+    await syncMessBillPayments(existing._id);
 
     const label = formatBillMonthLabel(month, year);
     const dueStr = formatDueDate(dueDate);
-    const warnings = [];
 
     try {
       await notificationService.createBroadcast({
@@ -120,7 +185,7 @@ async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace
     }
 
     const billDoc = attachFileUrls(existing.toObject());
-    return { bill: billDoc, notified: warnings.length === 0, warnings };
+    return { bill: billDoc, notified: !warnings.includes('notification_failed'), warnings };
   }
 
   const storageKey = buildMessBillStorageKey({
@@ -130,22 +195,12 @@ async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace
     mimeType: file.mimetype,
   });
 
-  let uploadResult;
-  try {
-    uploadResult = await messBillStorage.saveFile({
-      buffer: file.buffer,
-      storageKey,
-      fileName: file.originalname,
-      mimeType: file.mimetype,
-      month,
-      year,
-    });
-  } catch (err) {
-    console.error('[mess-bill] Storage upload failed:', err.message);
-    throw new Error('STORAGE_UPLOAD_FAILED');
-  }
-
-  const newStorageKey = typeof uploadResult === 'string' ? uploadResult : uploadResult.storageKey;
+  const { uploadResult, newStorageKey, usedProvider, warnings } = await saveFileWithFallback({
+    file,
+    storageKey,
+    month,
+    year,
+  });
 
   const bill = new MessBill({
     month,
@@ -155,12 +210,12 @@ async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace
     storageKey: newStorageKey,
     mimeType: file.mimetype,
     fileSize: file.buffer.length,
-    storageProvider: messBillStorage.name,
+    storageProvider: usedProvider,
     uploadedBy,
     isPublished: true,
   });
 
-  if (messBillStorage.name === 'google-drive') {
+  if (usedProvider === 'google-drive') {
     bill.fileId = uploadResult.fileId;
     bill.viewUrl = uploadResult.viewUrl;
     bill.downloadUrl = uploadResult.downloadUrl;
@@ -180,19 +235,10 @@ async function publishMessBill({ month, year, dueDate, file, uploadedBy, replace
     throw err;
   }
 
-  const students = await User.find({ role: 'student', status: 'active' }).select('_id');
-  if (students.length > 0) {
-    const payments = students.map((s) => ({
-      userId: s._id,
-      messBillId: bill._id,
-      isPaid: false,
-    }));
-    await MessBillPayment.insertMany(payments);
-  }
+  await syncMessBillPayments(bill._id);
 
   const label = formatBillMonthLabel(month, year);
   const dueStr = formatDueDate(dueDate);
-  const warnings = [];
 
   try {
     await notificationService.createBroadcast({
