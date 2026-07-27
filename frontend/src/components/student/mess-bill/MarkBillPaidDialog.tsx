@@ -66,7 +66,7 @@ export default function MarkBillPaidDialog({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="min-h-[48px] flex-1 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700"
+            className="min-h-[44px] flex-1 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 active-press"
           >
             Cancel
           </button>
@@ -74,7 +74,7 @@ export default function MarkBillPaidDialog({
             type="button"
             onClick={onConfirm}
             disabled={isPending}
-            className="min-h-[48px] flex-1 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white disabled:opacity-60"
+            className="min-h-[44px] flex-1 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white disabled:opacity-60 active-press"
           >
             {isPending ? "Saving..." : "Mark as Paid"}
           </button>

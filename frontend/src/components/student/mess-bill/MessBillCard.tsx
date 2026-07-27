@@ -132,35 +132,34 @@ export default function MessBillCard({ bill }: MessBillCardProps) {
       </div>
 
       {isPaid ? (
-        <div className="space-y-3">
-          <div className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-50 text-sm font-semibold text-emerald-700">
-            Paid ✓
+        <div className="flex min-h-[44px] w-full items-center justify-between rounded-xl bg-emerald-50/90 border border-emerald-100 px-4 text-sm font-semibold text-emerald-700">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span>Payment Confirmed</span>
           </div>
           <button
             type="button"
             onClick={handleMarkUnpaid}
             disabled={updatePayment.isPending}
-            className="w-full text-center text-sm font-medium text-gray-500 underline-offset-2 hover:text-[var(--mh-primary)] hover:underline disabled:opacity-50"
+            className="text-xs font-medium text-gray-500 hover:text-gray-800 underline-offset-2 hover:underline disabled:opacity-50"
           >
             Mark as Unpaid
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
-          {bill.status === "unpaid" && (
-            <button
-              type="button"
-              onClick={() => setPayOpen(true)}
-              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#22c55e] text-sm font-semibold text-white active-press"
-            >
-              <HiOutlineCreditCard className="h-5 w-5" />
-              Pay Bill
-            </button>
-          )}
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => setPayOpen(true)}
+            className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white shadow-sm hover:bg-[var(--mh-primary-dark)] active-press"
+          >
+            <HiOutlineCreditCard className="h-5 w-5" />
+            Pay via SBI Collect
+          </button>
           <button
             type="button"
             onClick={() => setConfirmOpen(true)}
-            className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 hover:bg-gray-50 active-press"
+            className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 active-press"
           >
             Mark as Paid
           </button>
