@@ -1,10 +1,12 @@
 const messBillReminderService = require('./messBillReminderService');
 const MessBill = require('../models/MessBill');
 const MessBillPayment = require('../models/MessBillPayment');
+const User = require('../models/User');
 const notificationService = require('./notificationService');
 
 jest.mock('../models/MessBill');
 jest.mock('../models/MessBillPayment');
+jest.mock('../models/User');
 jest.mock('./notificationService');
 jest.mock('../config', () => {
   const actual = jest.requireActual('../config');
@@ -17,6 +19,7 @@ jest.mock('../config', () => {
 describe('messBillReminderService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    User.find.mockReturnValue({ select: jest.fn().mockResolvedValue([]) });
   });
 
   describe('processRemindersForOffset', () => {

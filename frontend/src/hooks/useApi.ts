@@ -283,6 +283,24 @@ export function useDeleteMessBill() {
   });
 }
 
+export function useTriggerMessBillReminders() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await api.post<{ message: string; stats?: { total: number; r3: number; r1: number } }>(
+        '/api/mess-bill/reminders/trigger',
+        {}
+      );
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications });
+    },
+  });
+}
+
 export function useCreateNotification() {
   const queryClient = useQueryClient();
   

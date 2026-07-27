@@ -5,6 +5,8 @@ const notificationService = require('./notificationService');
 const { formatBillMonthLabel, formatDueDate } = require('../utils/messBillFormat');
 const config = require('../config');
 
+const User = require('../models/User');
+
 /**
  * Get the target day's UTC boundaries (startOfDay and endOfDay) relative to a timezone.
  * This function is completely host-server-timezone independent.
@@ -41,7 +43,20 @@ async function processRemindersForOffset(daysBefore, reminderField, type, titleP
   });
   let sent = 0;
 
+  // Sync payments for active students first
+  const activeStudents = await User.find({ role: 'student', status: 'active' }).select('_id');
+
   for (const bill of bills) {
+    if (activeStudents.length > 0) {
+      const existingPayments = await MessBillPayment.find({ messBillId: bill._id }).select('userId');
+      const existingUserIds = new Set(existingPayments.map((p) => p.userId.toString()));
+      const missing = activeStudents
+        .filter((s) => !existingUserIds.has(s._id.toString()))
+        .map((s) => ({ userId: s._id, messBillId: bill._id, isPaid: false }));
+      if (missing.length > 0) {
+        await MessBillPayment.insertMany(missing);
+      }
+    }
 
     const label = formatBillMonthLabel(bill.month, bill.year);
     const dueStr = formatDueDate(bill.dueDate);
@@ -53,7 +68,6 @@ async function processRemindersForOffset(daysBefore, reminderField, type, titleP
     });
 
     for (const payment of payments) {
-      const daysText = daysBefore === 3 ? '3 days' : 'tomorrow';
       const title =
         daysBefore === 3
           ? 'Mess Bill Reminder'
@@ -103,6 +117,7 @@ async function runDailyReminders() {
   if (r3 > 0 || r1 > 0) {
     console.log(`[mess-bill-reminder] Sent ${r3} three-day and ${r1} one-day reminders`);
   }
+  return { r3, r1, total: r3 + r1 };
 }
 
 module.exports = {
