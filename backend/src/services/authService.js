@@ -133,6 +133,8 @@ async function generatePasswordResetToken(email) {
 
 /**
  * Send password reset email (SMTP; defaults match Gmail on port 465).
+ * Connection/socket timeouts are set to prevent indefinite hangs when
+ * the SMTP server is unreachable.
  */
 async function sendPasswordResetEmail(user, resetToken) {
   if (!config.emailUser || !config.emailPass) {
@@ -151,21 +153,78 @@ async function sendPasswordResetEmail(user, resetToken) {
       user: config.emailUser,
       pass: config.emailPass,
     },
+    connectionTimeout: 10000,  // 10 s — fail fast if SMTP is unreachable
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 
   const mailOptions = {
-    from: `"MH App" <${config.emailUser}>`,
+    from: `"MH App — GEC Palakkad" <${config.emailUser}>`,
     to: user.email,
-    subject: 'MH App Password Reset Request',
-    html: `
-      <h1>Reset your Password</h1>
-      <p>You are receiving this email because you (or someone else) have requested the reset of the password for your account.</p>
-      <p>Please click on the following link, or paste it into your browser to complete the process:</p>
-      <a href="${resetURL}">${resetURL}</a>
-      <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
-      <p>This link is valid for 30 minutes.</p>
-      <h2>Admin MH App</h2>
-    `,
+    subject: 'MH App — Password Reset Request',
+    text: [
+      `Hello ${user.name},`,
+      '',
+      'You requested a password reset for your MH App account.',
+      '',
+      `Reset link (valid for 30 minutes):`,
+      resetURL,
+      '',
+      'If you did not request this, ignore this email — your password will not change.',
+      '',
+      '— MH App, GEC Sreekrishnapuram',
+    ].join('\n'),
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f7;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#4441CC 0%,#6c63ff 100%);padding:28px 32px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">MH App</h1>
+            <p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:12px;">GEC Sreekrishnapuram — Men's Hostel</p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px;">
+            <h2 style="margin:0 0 8px;color:#111;font-size:18px;font-weight:700;">Reset your password</h2>
+            <p style="margin:0 0 16px;color:#555;font-size:14px;line-height:1.6;">
+              Hello <strong>${user.name}</strong>,<br>
+              We received a request to reset the password for your account. Click the button below to choose a new password.
+            </p>
+            <div style="text-align:center;margin:24px 0;">
+              <a href="${resetURL}"
+                 style="display:inline-block;background:#4441CC;color:#ffffff;text-decoration:none;padding:13px 32px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.2px;">
+                Reset Password
+              </a>
+            </div>
+            <p style="margin:0 0 8px;color:#888;font-size:12px;line-height:1.6;">
+              This link expires in <strong>30 minutes</strong>. If the button doesn't work, copy and paste this URL into your browser:
+            </p>
+            <p style="margin:0 0 24px;word-break:break-all;">
+              <a href="${resetURL}" style="color:#4441CC;font-size:12px;">${resetURL}</a>
+            </p>
+            <hr style="border:none;border-top:1px solid #eee;margin:0 0 16px;">
+            <p style="margin:0;color:#aaa;font-size:11px;line-height:1.6;">
+              If you did not request a password reset, you can safely ignore this email — your password will remain unchanged.
+            </p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#fafafa;padding:16px 32px;text-align:center;border-top:1px solid #eee;">
+            <p style="margin:0;color:#ccc;font-size:11px;">© ${new Date().getFullYear()} MH App — GEC Sreekrishnapuram</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
   };
 
   try {
@@ -180,6 +239,7 @@ async function sendPasswordResetEmail(user, resetToken) {
     throw wrapped;
   }
 }
+
 
 /**
  * Reset user password using token
