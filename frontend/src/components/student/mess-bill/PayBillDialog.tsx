@@ -66,11 +66,15 @@ export default function PayBillDialog({
           </span>
         </div>
 
+        <p className="mt-3 text-xs text-gray-500 leading-relaxed">
+          💡 After completing payment on SBI Collect, return here and mark your bill as paid to stop reminder notifications.
+        </p>
+
         <div className="mt-5 flex gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[48px] flex-1 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 active-press"
+            className="min-h-[44px] flex-1 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 active-press hover:bg-gray-50"
           >
             Cancel
           </button>
@@ -79,9 +83,9 @@ export default function PayBillDialog({
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
-            className="min-h-[48px] flex-1 flex items-center justify-center rounded-xl bg-[var(--mh-primary)] text-xs font-semibold text-white active-press hover:opacity-95 text-center px-1"
+            className="min-h-[44px] flex-1 flex items-center justify-center rounded-xl bg-[var(--mh-primary)] text-sm font-semibold text-white active-press hover:opacity-95 text-center px-3"
           >
-            Continue to SBI Collect
+            Go to SBI Collect
           </a>
         </div>
       </div>

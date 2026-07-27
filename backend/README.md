@@ -1,4 +1,4 @@
-# MH App v2.0.1 — Backend (Express API)
+# MH App v2.0.2 — Backend (Express API)
 
 This directory contains the Express REST API server of the hostel mess management application. It handles authentication, attendance marking logic, bill indexing, push notification dispatches, and system resets.
 
@@ -61,7 +61,7 @@ backend/
 
 * **Timezone Safety**: The cron job schedules due date checks in India Standard Time (`Asia/Kolkata`) using `date-fns-tz`. Day boundaries are computed in IST and queried on the MongoDB database as timezone-independent UTC timestamps.
 * **Attendance Window**: Students can mark attendance for yesterday, today, and up to `ATTENDANCE_WINDOW_DAYS` in advance.
-* **Attendance Deadline**: Marking for a specific day locks at `ATTENDANCE_DEADLINE_HOUR` UTC on the *previous* calendar day. For instance, a deadline hour of `19` locks attendance marking at 19:00 UTC (12:30 AM IST).
+* **Attendance Deadline**: Marking for a specific day locks at `ATTENDANCE_DEADLINE_HOUR` IST on the *previous* calendar day. For instance, a deadline hour of `19` locks attendance marking at 7:00 PM IST (19:00 IST / 13:30 UTC).
 
 ---
 
@@ -71,6 +71,25 @@ The mess bill files are saved automatically onto Google Drive by setting `MESS_B
 * **Structure**: Dynamically creates a main directory `MH App Bills`, followed by year subfolders and month subfolders (e.g. `MH App Bills/2026/June/file.pdf`).
 * **Permissions**: Access permissions are programmatically set to reader (`role: 'reader'`, `type: 'anyone'`) so student download links resolve instantly.
 * **Fallback**: Omit Google Drive keys to automatically fall back to local disk storage (`uploads/mess-bills/`).
+
+---
+
+## 📈 Bulk User Import
+
+The bulk import flow is shared by the admin UI and the local Python wrapper through the same backend service.
+
+Template columns in row 1:
+1. **Name**
+2. **Year** or **Year Of Study**
+3. **Room Number**
+4. **Email**
+
+Workflow:
+1. Validate the full Excel file before inserting any users.
+2. Create users sequentially without a long-running MongoDB transaction.
+3. Send each welcome email immediately after its user is created.
+4. Continue processing later rows even if one row or one email fails.
+5. Return row-level import results plus email sent and email failed counts.
 
 ---
 

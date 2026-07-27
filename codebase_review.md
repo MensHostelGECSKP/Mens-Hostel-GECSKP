@@ -32,7 +32,7 @@
 | Field | Value |
 |-------|--------|
 | **Name** | MH App — Mess Management Web App |
-| **Version** | v2.0.1 (Production Release) |
+| **Version** | v2.0.2 (Production Release) |
 | **Org** | Men's Hostel, GEC Sreekrishnapuram (GECSKP) |
 | **Roles** | `student`, `admin` |
 | **Core features** | Mess cut attendance calendar, admin daily summary & monthly reports, mess bills (Google Drive PDF storage), notifications (global broadcast + Web Push dispatches), user management, year-end reset |

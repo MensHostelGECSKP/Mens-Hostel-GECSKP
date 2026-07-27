@@ -3,9 +3,9 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { HiArrowUpTray, HiTrash, HiDocumentText } from "react-icons/hi2";
+import { HiArrowUpTray, HiTrash, HiDocumentText, HiBell } from "react-icons/hi2";
 import { monthNames } from "@/constants/months";
-import { useMessBills, usePublishMessBill } from "@/hooks/useApi";
+import { useMessBills, usePublishMessBill, useTriggerMessBillReminders } from "@/hooks/useApi";
 import type { MessBill } from "@/types";
 import { formatBillMonthLabel, formatDueDate } from "@/utils/messBillDisplay";
 import { Skeleton } from "@/components/student/Skeleton";
@@ -22,6 +22,7 @@ export default function UploadMessBillView() {
   const router = useRouter();
   const { data: bills = [], isLoading, refetch } = useMessBills();
   const publishBill = usePublishMessBill();
+  const triggerReminders = useTriggerMessBillReminders();
 
   const [file, setFile] = useState<File | null>(null);
   const [month, setMonth] = useState(String(new Date().getMonth() + 1));
@@ -34,6 +35,16 @@ export default function UploadMessBillView() {
     () => [...bills].sort((a, b) => b.year - a.year || b.month - a.month),
     [bills]
   );
+
+  const handleTriggerReminders = async () => {
+    try {
+      const res = await triggerReminders.mutateAsync();
+      toast.success(res?.message || "Reminders triggered successfully");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to trigger reminders";
+      toast.error(msg);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -62,7 +73,9 @@ export default function UploadMessBillView() {
 
     try {
       const result = await publishBill.mutateAsync(formData);
-      if (result?.warnings?.includes("notification_failed")) {
+      if (result?.warnings?.includes("google_drive_failed_saved_locally")) {
+        toast.success("Bill published (saved locally; Google Drive token expired)");
+      } else if (result?.warnings?.includes("notification_failed")) {
         toast.success("Bill published, but some notifications could not be sent.");
       } else {
         toast.success("Mess bill published");
@@ -80,7 +93,9 @@ export default function UploadMessBillView() {
           formData.append("replace", "true");
           try {
             const result = await publishBill.mutateAsync(formData);
-            if (result?.warnings?.includes("notification_failed")) {
+            if (result?.warnings?.includes("google_drive_failed_saved_locally")) {
+              toast.success("Bill replaced (saved locally; Google Drive token expired)");
+            } else if (result?.warnings?.includes("notification_failed")) {
               toast.success("Bill replaced, but some notifications could not be sent.");
             } else {
               toast.success("Mess bill replaced successfully");
@@ -190,6 +205,22 @@ export default function UploadMessBillView() {
           {publishBill.isPending ? "Uploading..." : "Publish"}
         </button>
       </form>
+
+      <div className="mx-4 mb-6 rounded-2xl bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] md:mx-0 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold text-gray-900">Mess Bill Reminders</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Manually dispatch due date push and in-app reminders to students.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleTriggerReminders}
+          disabled={triggerReminders.isPending}
+          className="flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--mh-primary)]/30 bg-[var(--mh-primary-soft)] px-4 text-xs font-semibold text-[var(--mh-primary)] disabled:opacity-50 active-press"
+        >
+          <HiBell className="h-4 w-4" />
+          {triggerReminders.isPending ? "Sending..." : "Send Reminders Now"}
+        </button>
+      </div>
 
       <section className="px-4 pb-8 md:px-0" aria-label="Published bills">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">

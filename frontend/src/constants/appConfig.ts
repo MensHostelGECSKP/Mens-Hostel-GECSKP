@@ -17,8 +17,8 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   name: "MH App",
-  version: "2.0.1",
-  buildNumber: "2026.0607.01",
+  version: "2.0.2",
+  buildNumber: "2026.0723.01",
   releaseDate: "July 2026",
   description: "Hostel Management System designed for attendance, mess cuts, notifications, reports and administration.",
   developedBy: "Sabari & Roomies",
@@ -32,6 +32,13 @@ export const appConfig: AppConfig = {
     "PWA Support",
   ],
   changelog: [
+    {
+      version: "v2.0.2",
+      releaseDate: "July 2026",
+      changes: [
+        "Fixed mess cut deadline calculation to strictly enforce cutoff hour in Indian Standard Time (IST)",
+      ],
+    },
     {
       version: "v2.0.1",
       releaseDate: "July 2026",

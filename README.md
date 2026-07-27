@@ -1,4 +1,4 @@
-# MH App v2.0.1 — Mess Management Web App
+# MH App v2.0.2 — Mess Management Web App
 
 ## Overview
 A modern, full-stack, and PWA-enabled web application for managing hostel mess attendance, meal cuts, notifications, and billing, designed specifically for the Government Engineering College Sreekrishnapuram (GECSKP) Men's Hostel.
@@ -63,7 +63,7 @@ Create a `.env` file in the `backend/` directory:
 | `GOOGLE_REDIRECT_URI` | No | Playground | OAuth redirect URI (default: google oauth playground) |
 | `GOOGLE_REFRESH_TOKEN` | Conditional | — | Google OAuth Refresh Token (required for `google-drive`) |
 | `MESS_BILL_REMINDER_TZ` | No | `Asia/Kolkata` | Timezone for due date reminders |
-| `ATTENDANCE_DEADLINE_HOUR` | No | `19` | UTC Hour of the previous day to lock marking (19:00 UTC = 12:30 AM IST) |
+| `ATTENDANCE_DEADLINE_HOUR` | No | `19` | Hour (in IST) of the previous day to lock marking (19:00 IST = 7:00 PM IST / 13:30 UTC) |
 | `ATTENDANCE_WINDOW_DAYS` | No | `7` | Days in advance attendance can be logged |
 | `VAPID_PUBLIC_KEY` | No | — | Web Push VAPID public key (auto-generated in dev if blank) |
 | `VAPID_PRIVATE_KEY` | No | — | Web Push VAPID private key (auto-generated in dev if blank) |
@@ -109,11 +109,18 @@ To onboard students in bulk, admins can import an Excel spreadsheet (.xlsx) from
 
 The sheet must contain the following columns in row 1:
 1. **Name**: The full name of the student.
-2. **Email**: The unique student email address (used for logging in).
+2. **Year** or **Year Of Study**: Year of study (e.g. `1`, `2`, `3`, `4`).
 3. **Room Number**: Hostel room number (e.g. `104`).
-4. **Year**: Year of study (e.g. `1`, `2`, `3`, `4`).
+4. **Email**: The unique student email address (used for logging in).
 
-*Note: The script automatically generates secure default passwords and dispatches them directly to the students' registered emails on successful import.*
+Import flow:
+1. The backend validates the full spreadsheet first.
+2. Valid rows are imported one at a time.
+3. After each user is created, the welcome email is attempted immediately before moving to the next row.
+4. Email failures do not stop later rows from being processed.
+5. The completion summary shows imported, skipped, failed, email sent, email failed, and per-row results.
+
+The local Python wrapper uses the same backend import service, so admin UI imports and local imports behave the same way.
 
 ---
 
@@ -124,3 +131,11 @@ The **Year-End Reset** cleans up database operational data to prepare the system
 * **Preserved data**: Admin credentials, audit log history, system settings.
 * **Google Drive option**: If checked, the script recursively purges the `MH App Bills` directory in the configured Google Drive account.
 * **Auxiliary collection sweeps**: Purges related push subscription endpoints, metrics, and notification states to prevent database bloat.
+
+---
+
+## 🔒 MongoDB Atlas Network Access & IP Whitelisting
+
+If you encounter `MongooseServerSelectionError` or IP Whitelist connection errors (e.g. after removing `0.0.0.0/0`):
+1. **Cloud Deployments (Render / Vercel / Heroku)**: Outbound server IPs change dynamically. On [MongoDB Atlas](https://cloud.mongodb.com), go to **Security -> Network Access**, click **Add IP Address**, and select **Allow Access from Anywhere (`0.0.0.0/0`)**. Security is maintained via robust MongoDB user authentication and strong password credentials.
+2. **Local Development**: Add your local machine's current public IP address to the Atlas Network Access whitelist, or keep `0.0.0.0/0` enabled during local development.

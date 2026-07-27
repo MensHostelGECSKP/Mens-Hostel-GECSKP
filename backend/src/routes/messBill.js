@@ -14,6 +14,7 @@ const {
   downloadMessBillFile,
   updatePaymentStatus,
   deleteMessBill,
+  triggerReminders,
 } = require('../controllers/messBillController');
 
 const router = express.Router();
@@ -26,6 +27,14 @@ router.post(
   uploadMessBillSingle,
   validatePublishMessBill,
   publishMessBill
+);
+
+router.post(
+  '/reminders/trigger',
+  auth,
+  adminOnly,
+  csrfProtection,
+  triggerReminders
 );
 
 router.get('/', auth, getAllMessBills);

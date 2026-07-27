@@ -131,6 +131,20 @@ async function downloadMessBillFile(req, res, next) {
   return respondWithBillFile(req, res, next, 'attachment');
 }
 
+async function triggerReminders(req, res, next) {
+  try {
+    const { runDailyReminders } = require('../services/messBillReminderService');
+    const result = await runDailyReminders();
+    await logAuditEvent(req, 'MESS_BILL_REMINDERS_TRIGGER', { totalSent: result.total, r3: result.r3, r1: result.r1 });
+    res.json({
+      message: `Triggered mess bill reminders. Sent ${result.total} notification(s).`,
+      stats: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   publishMessBill,
   getAllMessBills,
@@ -139,4 +153,5 @@ module.exports = {
   downloadMessBillFile,
   updatePaymentStatus,
   deleteMessBill,
+  triggerReminders,
 };

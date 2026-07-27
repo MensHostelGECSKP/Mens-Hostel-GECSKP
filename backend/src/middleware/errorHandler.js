@@ -55,6 +55,10 @@ function errorHandler(err, req, res, next) {
     return errorResponse(res, errorInfo.status, errorInfo.message, err.message);
   }
 
+  if (err.status && typeof err.status === 'number') {
+    return errorResponse(res, err.status, err.message || 'Error occurred', err.code || 'HTTP_ERROR');
+  }
+
   // Handle specific error types
   if (err.name === 'ValidationError') {
     return errorResponse(res, 400, 'Validation error', 'VALIDATION_ERROR', err.details);

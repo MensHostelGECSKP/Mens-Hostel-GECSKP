@@ -98,10 +98,10 @@ export default function AttendanceCalendar({
     const [y, m, d] = dateStr.split("-").map(Number);
     const requestedDate = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
     
-    // Calculate deadline matching backend (19:00 UTC of previous day)
-    const deadline = new Date(requestedDate);
-    deadline.setUTCDate(deadline.getUTCDate() - 1);
-    deadline.setUTCHours(ATTENDANCE_DEADLINE_HOUR, 0, 0, 0);
+    // Calculate deadline matching backend (ATTENDANCE_DEADLINE_HOUR in IST on previous day)
+    const previousDay = new Date(requestedDate);
+    previousDay.setUTCDate(previousDay.getUTCDate() - 1);
+    const deadline = new Date(previousDay.getTime() + (ATTENDANCE_DEADLINE_HOUR - 5.5) * 60 * 60 * 1000);
     
     // Calculate window matching backend (todayUTC - 1 day to todayUTC + windowDays)
     const todayUTC = new Date(now);

@@ -3,8 +3,10 @@ const config = require('../config');
 
 const ALLOWED_MIMES = new Set([
   'application/pdf',
+  'application/x-pdf',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel',
+  'application/octet-stream',
 ]);
 
 const ALLOWED_EXT = /\.(pdf|xlsx|xls)$/i;

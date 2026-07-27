@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const mongoose = require('mongoose');
 const fs = require('fs');
 const readline = require('readline');
@@ -75,15 +76,26 @@ async function run() {
 
       console.log('Importing users...');
       try {
-        const result = await importService.importUsers(preview.validRows, null, true);
+        const result = await importService.importUsers(preview.validRows, null, {
+          skippedCount: preview.invalidRowsCount,
+        });
         console.log('\n--- IMPORT RESULTS ---');
-        console.log(`Successfully Imported: ${result.successfullyImported}`);
-        console.log(`Failed: ${result.failed + preview.invalidRowsCount}`);
+        console.log(`Total Rows: ${result.totalRows}`);
+        console.log(`Imported: ${result.importedCount}`);
+        console.log(`Skipped: ${result.skippedCount}`);
+        console.log(`Failed: ${result.failedCount}`);
+        console.log(`Emails Sent: ${result.emailStats?.sent ?? 0}`);
+        console.log(`Emails Failed: ${result.emailStats?.failed ?? 0}`);
         
-        if (result.errors && result.errors.length > 0) {
-          console.log('\nWrite Errors:');
-          result.errors.forEach((err) => {
-            console.log(`Row ${err.rowNumber} (${err.email}): ${err.error}`);
+        if (result.rowResults && result.rowResults.length > 0) {
+          console.log('\nRow Details:');
+          result.rowResults.forEach((row) => {
+            const details = row.status === 'failed'
+              ? row.message
+              : row.emailStatus === 'failed'
+                ? `${row.message} | Email: ${row.emailError}`
+                : row.message;
+            console.log(`Row ${row.rowNumber} (${row.email}): ${details}`);
           });
         }
         console.log('----------------------\n');

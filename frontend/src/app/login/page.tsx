@@ -25,10 +25,6 @@ export default function LoginPage() {
     }
   }, [loading, isLoggedIn, router]);
 
-  if (loading) {
-    return <FullPageLoader text="Authenticating..." />;
-  }
-
   const {
     values,
     errors,
@@ -83,6 +79,10 @@ export default function LoginPage() {
       }
     },
   });
+
+  if (loading) {
+    return <FullPageLoader text="Authenticating..." />;
+  }
 
   // Don't render login form if already authenticated
   if (isLoggedIn) {
