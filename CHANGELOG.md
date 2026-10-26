@@ -2,6 +2,15 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
+## [2.1.0] - 2026-10-26
+
+### Fixed
+* **Mobile Attendance & Mess Cut Marking**: Added `touch-manipulation` and user-select protection to attendance calendar day cells to eliminate tap lag on mobile browsers, and updated `handleMark` to present clear, descriptive server rejection reasons instead of generic failure toasts.
+* **CSPRNG Temporary Password Generation**: Migrated `importService.generatePassword` from pseudo-random `Math.random()` to Node `crypto.randomBytes(12).toString('base64url')`.
+* **Push Notification Dispatch Batching**: Replaced sequential blocking web push dispatches with chunked concurrent batches using `Promise.allSettled`, eliminating request timeouts when publishing announcements or mess bills.
+
+---
+
 ## [2.0.3] - 2026-10-26
 
 ### Fixed

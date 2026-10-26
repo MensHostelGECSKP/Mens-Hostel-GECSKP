@@ -33,15 +33,25 @@ async function createNotification(notificationData) {
     const students = await User.find({ role: 'student', status: 'active' }).select('_id');
     const url = getDeepLinkUrl(notification.type);
     
-    for (const student of students) {
-      await pushService.sendPushNotification(
-        student._id,
-        notification.type || 'announcement',
-        title,
-        message || 'New announcement published.',
-        { notificationId: notification._id.toString(), url }
+    // Batch in chunks of 20 to prevent request stalls
+    const batches = [];
+    for (let i = 0; i < students.length; i += 20) {
+      const chunk = students.slice(i, i + 20);
+      batches.push(
+        Promise.allSettled(
+          chunk.map((student) =>
+            pushService.sendPushNotification(
+              student._id,
+              notification.type || 'announcement',
+              title,
+              message || 'New announcement published.',
+              { notificationId: notification._id.toString(), url }
+            )
+          )
+        )
       );
     }
+    await Promise.all(batches);
   }
 
   return notification;
@@ -61,19 +71,28 @@ async function createBroadcast({ title, message, type, messBillId, pdfUrl }) {
   });
   await notification.save();
 
-  // Trigger push dispatches to all active students
+  // Trigger push dispatches to all active students in concurrent chunks
   const students = await User.find({ role: 'student', status: 'active' }).select('_id');
   const url = getDeepLinkUrl(type);
 
-  for (const student of students) {
-    await pushService.sendPushNotification(
-      student._id,
-      type,
-      title,
-      message,
-      { notificationId: notification._id.toString(), url, messBillId: messBillId ? messBillId.toString() : undefined }
+  const batches = [];
+  for (let i = 0; i < students.length; i += 20) {
+    const chunk = students.slice(i, i + 20);
+    batches.push(
+      Promise.allSettled(
+        chunk.map((student) =>
+          pushService.sendPushNotification(
+            student._id,
+            type,
+            title,
+            message,
+            { notificationId: notification._id.toString(), url, messBillId: messBillId ? messBillId.toString() : undefined }
+          )
+        )
+      )
     );
   }
+  await Promise.all(batches);
 
   return notification;
 }

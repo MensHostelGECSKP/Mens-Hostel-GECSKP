@@ -17,8 +17,8 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   name: "MH App",
-  version: "2.0.3",
-  buildNumber: "2026.1026.01",
+  version: "2.1.0",
+  buildNumber: "2026.1026.02",
   releaseDate: "October 2026",
   description: "Hostel Management System designed for attendance, mess cuts, notifications, reports and administration.",
   developedBy: "Sabari & Roomies",
@@ -32,6 +32,15 @@ export const appConfig: AppConfig = {
     "PWA Support",
   ],
   changelog: [
+    {
+      version: "v2.1.0",
+      releaseDate: "October 2026",
+      changes: [
+        "Fixed mobile device attendance and mess cut marking reliability with touch-manipulation optimizations and actionable error diagnostics",
+        "Switched student bulk import temporary password generator to cryptographically secure random bytes (CSPRNG)",
+        "Batched web push notification dispatches in non-blocking concurrent chunks to eliminate admin publish timeouts",
+      ],
+    },
     {
       version: "v2.0.3",
       releaseDate: "October 2026",

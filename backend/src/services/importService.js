@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const XLSX = require('xlsx');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
@@ -17,10 +18,10 @@ function delay(ms) {
 }
 
 /**
- * Generates a random password for new accounts.
+ * Generates a cryptographically secure random password for new accounts.
  */
 function generatePassword(length = 12) {
-  return [...Array(length)].map(() => (Math.random() * 36 | 0).toString(36)).join('');
+  return crypto.randomBytes(length).toString('base64url').slice(0, length);
 }
 
 /**
