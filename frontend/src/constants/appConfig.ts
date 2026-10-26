@@ -17,9 +17,9 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   name: "MH App",
-  version: "2.0.2",
-  buildNumber: "2026.0723.01",
-  releaseDate: "July 2026",
+  version: "2.0.3",
+  buildNumber: "2026.1026.01",
+  releaseDate: "October 2026",
   description: "Hostel Management System designed for attendance, mess cuts, notifications, reports and administration.",
   developedBy: "Sabari & Roomies",
   features: [
@@ -33,10 +33,29 @@ export const appConfig: AppConfig = {
   ],
   changelog: [
     {
+      version: "v2.0.3",
+      releaseDate: "October 2026",
+      changes: [
+        "Overhauled Forgot Password & Reset Password flows with interactive password strength feedback and secure state transitions",
+        "Refined IST timezone boundary calculations across daily attendance windows",
+        "Fixed input sanitization edge cases across names, URLs, and passwords",
+        "Upgraded core stack: Next.js 16.4.3, TanStack React Query 5.105, Axios 1.20, Mongoose 8.24.7",
+        "Patched high-severity security vulnerabilities in Nodemailer and Zod",
+      ],
+    },
+    {
       version: "v2.0.2",
       releaseDate: "July 2026",
       changes: [
-        "Fixed mess cut deadline calculation to strictly enforce cutoff hour in Indian Standard Time (IST)",
+        "Fixed mess cut deadline to strictly enforce cutoff hour in Indian Standard Time (IST)",
+        "Fixed attendance window boundary — no more off-by-one during 12:00 AM–5:30 AM IST",
+        "Fixed input sanitization — names with apostrophes (D'Souza), URLs, and passwords no longer get corrupted",
+        "Fixed Login page React Hooks ordering issue",
+        "Mess bill uploads now automatically fall back to local storage if Google Drive fails",
+        "Admins can now manually trigger payment reminders from the dashboard",
+        "Payment records auto-sync for active students when a new bill is published",
+        "MongoDB Atlas IP whitelist errors now show a clear diagnostic message at startup",
+        "Dependency security updates across the full stack",
       ],
     },
     {

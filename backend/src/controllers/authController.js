@@ -82,24 +82,27 @@ async function forgotPassword(req, res, next) {
         await authService.sendPasswordResetEmail(result.user, result.resetToken);
       } catch (err) {
         console.error('[forgot-password] Email not sent:', err.message, err.details || '');
-        if (config.nodeEnv === 'development') {
-          const hint =
-            err.message === 'EMAIL_NOT_CONFIGURED'
-              ? 'Set EMAIL_USER and EMAIL_PASS in backend/.env. For Gmail, create an App Password (Google Account → Security → 2-Step Verification → App passwords).'
-              : `SMTP error: ${err.details || err.message}. Check EMAIL_USER/EMAIL_PASS and SMTP_HOST/SMTP_PORT if not using Gmail.`;
-          return res.status(503).json({
-            error: hint,
-            code: ERROR_CODES.EMAIL_SEND_FAILED,
-          });
-        }
+
+        // Return a descriptive error in both dev and production so the user
+        // knows to contact the admin rather than waiting indefinitely.
+        const hint =
+          err.message === 'EMAIL_NOT_CONFIGURED'
+            ? 'Password reset emails are not configured. Please contact the hostel admin directly.'
+            : `Failed to send reset email. Please try again in a few minutes or contact the admin. (${err.details || err.message})`;
+        return res.status(503).json({
+          error: hint,
+          code: ERROR_CODES.EMAIL_SEND_FAILED,
+        });
       }
     }
 
-    res.json({ message: 'If your email is registered, you will receive a password reset link.' });
+    // Always return the same vague success message to prevent email enumeration
+    res.json({ message: 'If your email is registered, you will receive a password reset link shortly.' });
   } catch (err) {
     next(err);
   }
 }
+
 
 /**
  * Reset password

@@ -2,10 +2,34 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
-## [2.0.2] - 2026-07-23
+## [2.0.3] - 2026-10-26
+
+### Fixed
+* **Authentication & Password Recovery**: Overhauled the forgot-password and reset-password flows with interactive strength evaluation, responsive feedback, and enhanced email delivery reliability.
+* **IST Window Boundary & Sanitization**: Enforced consistent IST boundary checking for midnight-to-morning transitions and refined input sanitization without stripping valid punctuation in passwords, names, or URLs.
+
+### Security & Dependencies
+* **Patched Vulnerabilities**: Upgraded `nodemailer` to `10.2.1` and `zod` to `4.6.7` resolving high-severity advisories (GHSA-mrhx-c7xc-m3w5, GHSA-6vj9-mwq6-2f5v, and related).
+* **Package Updates**: Upgraded `next` to `16.4.3`, `@tanstack/react-query` to `5.105.0`, `axios` to `1.20.0`, `mongoose` to `8.24.7`, `multer` to `2.5.0`, `express-rate-limit` to `8.7.1`, and `compression` to `1.8.2`.
+
+---
+
+## [2.0.2] - 2026-07-28
 
 ### Fixed
 * **Mess Cut Cutoff Time Logic**: Fixed deadline calculation in backend `dateUtils.js` and frontend `AttendanceCalendar.tsx` to interpret `ATTENDANCE_DEADLINE_HOUR` (default `19` = 7:00 PM) strictly in Indian Standard Time (IST, UTC+5:30) on the previous calendar day instead of UTC, preventing users from marking cuts after 7:00 PM IST.
+* **IST Window Boundary Bug**: Added `getISTToday()` helper to `dateUtils.js` to anchor the allowed marking window to the IST calendar date. Previously, during 12:00 AM–5:30 AM IST the UTC clock still read the prior day, causing the max-markable date to be off by one day. The same fix is mirrored in `AttendanceCalendar.tsx`.
+* **Global Over-Sanitization**: Replaced `validator.escape()` with `validator.stripLow()` in `sanitize.js`. The previous implementation HTML-entity-encoded all strings on every request, corrupting stored passwords, names with apostrophes (e.g., `D'Souza`), URLs (slashes became `&#x2F;`), and Excel email templates. Security is preserved by Mongoose parameterised queries (NoSQL injection) and React auto-escaping (XSS).
+* **Login Hook Call Order**: Fixed React Hooks rules violation on the Login page where hook calls were conditionally ordered.
+
+### Added
+* **Storage Fallback Mechanism**: Automatically falls back to local file storage if Google Drive upload fails (e.g., expired OAuth token), with a clear diagnostic warning. Expanded accepted upload MIME types.
+* **Admin Manual Reminder Trigger**: Admins can now manually trigger mess bill payment reminders from the dashboard without waiting for the daily cron job.
+* **Automated Payment Sync**: Automatically creates `MessBillPayment` records for newly added active students against existing published bills, ensuring no students are missed in reminder cycles.
+* **MongoDB Atlas IP Diagnostics**: Added a clear startup diagnostic when a MongoDB Atlas IP whitelist error is detected, with step-by-step instructions to resolve it.
+
+### Chores
+* **Dependency Security Patches**: Updated React 19, Next.js 16, Mongoose 8, Multer 2, Nodemailer 9, node-cron 4, Helmet 8, express-rate-limit 8, and other packages to their latest patch versions.
 
 ---
 
