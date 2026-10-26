@@ -17,9 +17,9 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   name: "MH App",
-  version: "2.0.2",
-  buildNumber: "2026.0723.01",
-  releaseDate: "July 2026",
+  version: "2.0.3",
+  buildNumber: "2026.1026.01",
+  releaseDate: "October 2026",
   description: "Hostel Management System designed for attendance, mess cuts, notifications, reports and administration.",
   developedBy: "Sabari & Roomies",
   features: [
@@ -32,6 +32,17 @@ export const appConfig: AppConfig = {
     "PWA Support",
   ],
   changelog: [
+    {
+      version: "v2.0.3",
+      releaseDate: "October 2026",
+      changes: [
+        "Overhauled Forgot Password & Reset Password flows with interactive password strength feedback and secure state transitions",
+        "Refined IST timezone boundary calculations across daily attendance windows",
+        "Fixed input sanitization edge cases across names, URLs, and passwords",
+        "Upgraded core stack: Next.js 16.4.3, TanStack React Query 5.105, Axios 1.20, Mongoose 8.24.7",
+        "Patched high-severity security vulnerabilities in Nodemailer and Zod",
+      ],
+    },
     {
       version: "v2.0.2",
       releaseDate: "July 2026",

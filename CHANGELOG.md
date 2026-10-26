@@ -2,6 +2,18 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
+## [2.0.3] - 2026-10-26
+
+### Fixed
+* **Authentication & Password Recovery**: Overhauled the forgot-password and reset-password flows with interactive strength evaluation, responsive feedback, and enhanced email delivery reliability.
+* **IST Window Boundary & Sanitization**: Enforced consistent IST boundary checking for midnight-to-morning transitions and refined input sanitization without stripping valid punctuation in passwords, names, or URLs.
+
+### Security & Dependencies
+* **Patched Vulnerabilities**: Upgraded `nodemailer` to `10.2.1` and `zod` to `4.6.7` resolving high-severity advisories (GHSA-mrhx-c7xc-m3w5, GHSA-6vj9-mwq6-2f5v, and related).
+* **Package Updates**: Upgraded `next` to `16.4.3`, `@tanstack/react-query` to `5.105.0`, `axios` to `1.20.0`, `mongoose` to `8.24.7`, `multer` to `2.5.0`, `express-rate-limit` to `8.7.1`, and `compression` to `1.8.2`.
+
+---
+
 ## [2.0.2] - 2026-07-28
 
 ### Fixed
