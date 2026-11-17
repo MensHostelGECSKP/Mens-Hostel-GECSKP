@@ -2,6 +2,13 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
+## [2.2.1] - 2026-11-17
+
+### Fixed
+* **Attendance & Mess Cut Marking on Safari iOS & PWA**: Replaced the Double Submit Cookie CSRF pattern with HMAC-signed tokens (SHA-256, keyed on `JWT_SECRET`). The old pattern required the browser to echo back the `csrf-token` cookie on every state-changing request; Safari ITP, Firefox Enhanced Tracking Protection (strict), and iOS PWA standalone mode block or partition third-party/cross-site cookies, causing `req.cookies['csrf-token']` to be missing and returning 403 on `POST /api/attendance/mark`. The new HMAC token is verified directly from the `X-CSRF-Token` header without requiring cookies on the validation path.
+
+---
+
 ## [2.2.0] - 2026-11-17
 
 ### Fixed

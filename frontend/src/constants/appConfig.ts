@@ -17,8 +17,8 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   name: "MH App",
-  version: "2.2.0",
-  buildNumber: "2026.1117.01",
+  version: "2.2.1",
+  buildNumber: "2026.1117.02",
   releaseDate: "November 2026",
   description: "Hostel Management System designed for attendance, mess cuts, notifications, reports and administration.",
   developedBy: "Sabari & Roomies",
@@ -32,6 +32,13 @@ export const appConfig: AppConfig = {
     "PWA Support",
   ],
   changelog: [
+    {
+      version: "v2.2.1",
+      releaseDate: "November 2026",
+      changes: [
+        "Fixed attendance and mess cut marking failure on Safari iOS, Firefox strict mode, and PWA standalone — replaced Double Submit Cookie CSRF with HMAC-signed tokens that work even when third-party cookies are partitioned or blocked",
+      ],
+    },
     {
       version: "v2.2.0",
       releaseDate: "November 2026",
