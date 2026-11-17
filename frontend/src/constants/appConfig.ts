@@ -17,8 +17,8 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   name: "MH App",
-  version: "2.2.1",
-  buildNumber: "2026.1117.02",
+  version: "2.3.0",
+  buildNumber: "2026.1117.03",
   releaseDate: "November 2026",
   description: "Hostel Management System designed for attendance, mess cuts, notifications, reports and administration.",
   developedBy: "Sabari & Roomies",
@@ -32,6 +32,13 @@ export const appConfig: AppConfig = {
     "PWA Support",
   ],
   changelog: [
+    {
+      version: "v2.3.0",
+      releaseDate: "November 2026",
+      changes: [
+        "Added self-service in-app Change Password for students and administrators directly in their profile",
+      ],
+    },
     {
       version: "v2.2.1",
       releaseDate: "November 2026",

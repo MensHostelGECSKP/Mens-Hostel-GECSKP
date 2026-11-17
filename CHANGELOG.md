@@ -2,6 +2,13 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
+## [2.3.0] - 2026-11-17
+
+### Added
+* **In-App Self-Service Password Change**: Added an authenticated password change feature allowing students and administrators to update their account passwords directly from their profile without using the "Forgot Password" email flow. Requires validation of current password, minimum length verification, and updates securely via bcrypt hashing.
+
+---
+
 ## [2.2.1] - 2026-11-17
 
 ### Fixed

@@ -19,8 +19,10 @@ import {
   HiCog6Tooth,
   HiInformationCircle,
   HiBell,
+  HiLockClosed,
 } from "react-icons/hi2";
 import ProfileInfoRow from "./ProfileInfoRow";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const quickLinks = [
   {
@@ -77,6 +79,7 @@ export default function AdminProfile({ user }: { user: User }) {
   const router = useRouter();
   const { logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const initials = getUserInitials(user.name);
   const palette = getAvatarPalette(user.userId || user.email);
@@ -148,17 +151,27 @@ export default function AdminProfile({ user }: { user: User }) {
 
       <button
         type="button"
+        onClick={() => setShowChangePassword(true)}
+        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-gray-100 bg-white text-sm font-semibold text-gray-700 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-gray-50"
+      >
+        <HiLockClosed className="h-5 w-5 text-gray-400" aria-hidden />
+        Change Password
+      </button>
+
+      <button
+        type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-red-50 disabled:opacity-60"
+        className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white text-sm font-semibold text-red-600 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition active:scale-[0.96] hover:bg-red-50 disabled:opacity-60"
       >
         <HiArrowRightOnRectangle className="h-5 w-5" aria-hidden />
         {loggingOut ? "Signing out…" : "Log out"}
       </button>
 
-      <p className="mt-6 text-center text-xs text-gray-400">
-        Password change coming soon. Contact the system maintainer for account updates.
-      </p>
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
     </PageContainer>
   </>
 );

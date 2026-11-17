@@ -483,3 +483,13 @@ export function useMarkAllNotificationsRead() {
     },
   });
 }
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const response = await api.post<{ message: string }>('/api/auth/change-password', data);
+      if (response.error) throw new Error(response.error);
+      return response.data;
+    },
+  });
+}

@@ -8,6 +8,7 @@ const {
   validateLogin,
   validateForgotPassword,
   validateResetPassword,
+  validateChangePassword,
   validateUpdateUser,
 } = require('../validators/authValidator');
 const {
@@ -15,6 +16,7 @@ const {
   login,
   forgotPassword,
   resetPassword,
+  changePassword,
   refresh,
   getCurrentUser,
   logout,
@@ -46,6 +48,9 @@ router.post('/forgot-password', authLimiter, validateForgotPassword, forgotPassw
 
 // Reset Password
 router.post('/reset-password/:token', authLimiter, validateResetPassword, resetPassword);
+
+// Change Password (authenticated user)
+router.post('/change-password', auth, authLimiter, validateChangePassword, changePassword);
 
 // Refresh token endpoint
 router.post('/refresh', refresh);

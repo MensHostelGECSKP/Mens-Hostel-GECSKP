@@ -49,6 +49,11 @@ const resetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: passwordSchema,
+});
+
 const updateUserSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
   email: emailSchema,
@@ -72,5 +77,6 @@ module.exports = {
   validateLogin: validate(loginSchema),
   validateForgotPassword: validate(forgotPasswordSchema),
   validateResetPassword: validate(resetPasswordSchema),
+  validateChangePassword: validate(changePasswordSchema),
   validateUpdateUser: validate(updateUserSchema),
 };
