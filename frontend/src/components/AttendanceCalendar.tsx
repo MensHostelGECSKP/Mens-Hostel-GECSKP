@@ -74,7 +74,8 @@ export default function AttendanceCalendar({
       setSelectedDate(null);
     } catch (err) {
       console.error('Failed to mark attendance:', err);
-      toast.error("Failed to save attendance. Please try again.");
+      const msg = err instanceof Error ? err.message : "Failed to save attendance. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -181,7 +182,7 @@ export default function AttendanceCalendar({
       <button
         key={day}
         type="button"
-        className={`mh-calendar-day relative flex aspect-square max-h-9 w-full max-w-9 mx-auto flex-col items-center justify-center rounded-lg transition-transform active:scale-95 ${
+        className={`mh-calendar-day relative flex aspect-square max-h-9 w-full max-w-9 mx-auto flex-col items-center justify-center rounded-lg touch-manipulation select-none transition-transform active:scale-95 ${
           canBeMarked ? "cursor-pointer hover:bg-gray-50/80" : "cursor-default"
         } ${dayText} ${cellBg}`}
         onClick={() => canBeMarked && openModal(dateStr)}

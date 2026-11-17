@@ -2,6 +2,40 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
+## [2.3.0] - 2026-11-17
+
+### Added
+* **In-App Self-Service Password Change**: Added an authenticated password change feature allowing students and administrators to update their account passwords directly from their profile without using the "Forgot Password" email flow. Requires validation of current password, minimum length verification, and updates securely via bcrypt hashing.
+
+---
+
+## [2.2.1] - 2026-11-17
+
+### Fixed
+* **Attendance & Mess Cut Marking on Safari iOS & PWA**: Replaced the Double Submit Cookie CSRF pattern with HMAC-signed tokens (SHA-256, keyed on `JWT_SECRET`). The old pattern required the browser to echo back the `csrf-token` cookie on every state-changing request; Safari ITP, Firefox Enhanced Tracking Protection (strict), and iOS PWA standalone mode block or partition third-party/cross-site cookies, causing `req.cookies['csrf-token']` to be missing and returning 403 on `POST /api/attendance/mark`. The new HMAC token is verified directly from the `X-CSRF-Token` header without requiring cookies on the validation path.
+
+---
+
+## [2.2.0] - 2026-11-17
+
+### Fixed
+* **Forgot Password on Production**: Resolved SMTP connection timeout on Render's free tier. The backend defaulted to port 465 (implicit TLS) which Render blocks outbound. Added `SMTP_PORT=587` and `SMTP_SECURE=false` to `render.yaml` to use STARTTLS, which Render allows. No code change to `authService.js` — the timeout guard and 503 error response already behave correctly.
+* **Missing `JWT_REFRESH_SECRET` in Render manifest**: Added `JWT_REFRESH_SECRET` to `render.yaml` env var list so the secret can be set via the Render dashboard alongside other secrets.
+
+### Chores
+* **SMTP documentation**: Updated `backend/.env.example` with explicit `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE` defaults and guidance for cloud deployments.
+
+---
+
+## [2.1.0] - 2026-10-26
+
+### Fixed
+* **Mobile Attendance & Mess Cut Marking**: Added `touch-manipulation` and user-select protection to attendance calendar day cells to eliminate tap lag on mobile browsers, and updated `handleMark` to present clear, descriptive server rejection reasons instead of generic failure toasts.
+* **CSPRNG Temporary Password Generation**: Migrated `importService.generatePassword` from pseudo-random `Math.random()` to Node `crypto.randomBytes(12).toString('base64url')`.
+* **Push Notification Dispatch Batching**: Replaced sequential blocking web push dispatches with chunked concurrent batches using `Promise.allSettled`, eliminating request timeouts when publishing announcements or mess bills.
+
+---
+
 ## [2.0.3] - 2026-10-26
 
 ### Fixed

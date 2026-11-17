@@ -265,6 +265,25 @@ async function resetPassword(token, newPassword) {
 }
 
 /**
+ * Change password for an authenticated user
+ */
+async function changePassword(userId, currentPassword, newPassword) {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error('USER_NOT_FOUND');
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    throw new Error('INVALID_CURRENT_PASSWORD');
+  }
+
+  user.password = newPassword; // Pre-save hook will hash it
+  await user.save();
+  return true;
+}
+
+/**
  * Get user by ID
  */
 async function getUserById(userId) {
@@ -356,6 +375,7 @@ module.exports = {
   generatePasswordResetToken,
   sendPasswordResetEmail,
   resetPassword,
+  changePassword,
   getUserById,
   getAllStudents,
   updateStudentById,

@@ -17,9 +17,9 @@ export interface AppConfig {
 
 export const appConfig: AppConfig = {
   name: "MH App",
-  version: "2.0.3",
-  buildNumber: "2026.1026.01",
-  releaseDate: "October 2026",
+  version: "2.3.0",
+  buildNumber: "2026.1117.03",
+  releaseDate: "November 2026",
   description: "Hostel Management System designed for attendance, mess cuts, notifications, reports and administration.",
   developedBy: "Sabari & Roomies",
   features: [
@@ -32,6 +32,37 @@ export const appConfig: AppConfig = {
     "PWA Support",
   ],
   changelog: [
+    {
+      version: "v2.3.0",
+      releaseDate: "November 2026",
+      changes: [
+        "Added self-service in-app Change Password for students and administrators directly in their profile",
+      ],
+    },
+    {
+      version: "v2.2.1",
+      releaseDate: "November 2026",
+      changes: [
+        "Fixed attendance and mess cut marking failure on Safari iOS, Firefox strict mode, and PWA standalone — replaced Double Submit Cookie CSRF with HMAC-signed tokens that work even when third-party cookies are partitioned or blocked",
+      ],
+    },
+    {
+      version: "v2.2.0",
+      releaseDate: "November 2026",
+      changes: [
+        "Fixed forgot-password email delivery on production (Render) — switched SMTP to port 587 (STARTTLS) which Render's hosting allows, eliminating the connection timeout",
+        "Added JWT_REFRESH_SECRET and SMTP configuration variables to Render deployment manifest",
+      ],
+    },
+    {
+      version: "v2.1.0",
+      releaseDate: "October 2026",
+      changes: [
+        "Fixed mobile device attendance and mess cut marking reliability with touch-manipulation optimizations and actionable error diagnostics",
+        "Switched student bulk import temporary password generator to cryptographically secure random bytes (CSPRNG)",
+        "Batched web push notification dispatches in non-blocking concurrent chunks to eliminate admin publish timeouts",
+      ],
+    },
     {
       version: "v2.0.3",
       releaseDate: "October 2026",

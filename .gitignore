@@ -95,3 +95,6 @@ next-env.d.ts
 
 # Vercel
 /frontend/.vercel
+
+# Agent plans / internal docs
+/docs/

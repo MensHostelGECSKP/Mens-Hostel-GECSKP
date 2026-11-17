@@ -1,9 +1,42 @@
-// Custom CSRF protection using Double Submit Cookie pattern
+/**
+ * Custom CSRF protection using HMAC-signed tokens with cookie fallback
+ */
 const crypto = require('crypto');
+const config = require('../config');
 
-// Generate a random CSRF token
+const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function hmac(ts) {
+  return crypto
+    .createHmac('sha256', config.jwtSecret)
+    .update(String(ts))
+    .digest('hex');
+}
+
+// Generate an HMAC-signed CSRF token
 function generateCsrfToken() {
-  return crypto.randomBytes(32).toString('hex');
+  const ts = Date.now();
+  return `${ts}.${hmac(ts)}`;
+}
+
+// Verify HMAC token validity and expiry
+function verifyCsrfToken(token) {
+  if (!token || typeof token !== 'string') return false;
+  const dot = token.lastIndexOf('.');
+  if (dot === -1) return false;
+
+  const ts = Number(token.slice(0, dot));
+  if (!Number.isFinite(ts)) return false;
+
+  const now = Date.now();
+  // Reject if token is older than 24h or if from more than 1 min in future (clock skew guard)
+  if (now - ts > TOKEN_TTL_MS || ts > now + 60000) return false;
+
+  const expected = hmac(ts);
+  const actual = token.slice(dot + 1);
+  if (expected.length !== actual.length) return false;
+
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual));
 }
 
 // CSRF token middleware
@@ -16,52 +49,60 @@ function csrfProtection(req, res, next) {
   // Get token from header
   const tokenFromHeader = req.headers['x-csrf-token'];
   // Get token from cookie
-  const tokenFromCookie = req.cookies['csrf-token'];
+  const tokenFromCookie = req.cookies && req.cookies['csrf-token'];
 
-  // Validate tokens match
-  if (!tokenFromHeader || !tokenFromCookie || tokenFromHeader !== tokenFromCookie) {
-    return res.status(403).json({ 
-      error: 'CSRF token validation failed',
-      code: 'CSRF_ERROR'
-    });
+  // 1. Primary: Verify HMAC signature of header token
+  // Works across Safari iOS, PWA, and browsers blocking cross-site/third-party cookies
+  if (verifyCsrfToken(tokenFromHeader)) {
+    return next();
   }
 
-  next();
+  // 2. Fallback: Classic double-submit cookie comparison if legacy random token
+  if (tokenFromHeader && tokenFromCookie && tokenFromHeader === tokenFromCookie) {
+    return next();
+  }
+
+  return res.status(403).json({ 
+    error: 'CSRF token validation failed',
+    code: 'CSRF_ERROR'
+  });
 }
 
 // Middleware to set CSRF token cookie
 function setCsrfToken(req, res, next) {
-  // Only set if not already present
-  if (!req.cookies['csrf-token']) {
+  const cookieToken = req.cookies && req.cookies['csrf-token'];
+  // Reuse existing cookie if valid, otherwise generate fresh
+  if (!cookieToken || !verifyCsrfToken(cookieToken)) {
     const token = generateCsrfToken();
     const isProd = process.env.NODE_ENV === 'production';
     res.cookie('csrf-token', token, {
-      httpOnly: false, // Must be readable by JavaScript for Double Submit Cookie pattern
+      httpOnly: false, // Must be readable by JavaScript
       secure: isProd,
       sameSite: isProd ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: TOKEN_TTL_MS
     });
     req.csrfToken = token;
   } else {
-    req.csrfToken = req.cookies['csrf-token'];
+    req.csrfToken = cookieToken;
   }
   next();
 }
 
 // Get CSRF token (for token endpoint)
 function getCsrfToken(req, res) {
-  const token = req.cookies['csrf-token'] || generateCsrfToken();
-  
-  // Set cookie if not already set
-  if (!req.cookies['csrf-token']) {
-    const isProd = process.env.NODE_ENV === 'production';
-    res.cookie('csrf-token', token, {
-      httpOnly: false,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    });
+  const cookieToken = req.cookies && req.cookies['csrf-token'];
+  if (cookieToken && verifyCsrfToken(cookieToken)) {
+    return cookieToken;
   }
+  
+  const token = generateCsrfToken();
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('csrf-token', token, {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: TOKEN_TTL_MS
+  });
   
   return token;
 }
@@ -69,9 +110,7 @@ function getCsrfToken(req, res) {
 module.exports = {
   csrfProtection,
   setCsrfToken,
-  getCsrfToken
+  getCsrfToken,
+  generateCsrfToken,
+  verifyCsrfToken,
 };
-
-
-
-

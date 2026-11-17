@@ -125,6 +125,33 @@ async function resetPassword(req, res, next) {
 }
 
 /**
+ * Change password for authenticated user
+ */
+async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.validated;
+    const userId = req.user.userId || req.user._id;
+    await authService.changePassword(userId, currentPassword, newPassword);
+    await logAuditEvent(req, 'PASSWORD_CHANGE', {}, userId);
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    if (err.message === 'INVALID_CURRENT_PASSWORD') {
+      return res.status(400).json({
+        error: 'Current password is incorrect.',
+        code: ERROR_CODES.INVALID_CURRENT_PASSWORD,
+      });
+    }
+    if (err.message === 'USER_NOT_FOUND') {
+      return res.status(404).json({
+        error: 'User not found.',
+        code: ERROR_CODES.USER_NOT_FOUND,
+      });
+    }
+    next(err);
+  }
+}
+
+/**
  * Refresh access token
  */
 async function refresh(req, res, next) {
@@ -279,6 +306,7 @@ module.exports = {
   login,
   forgotPassword,
   resetPassword,
+  changePassword,
   refresh,
   getCurrentUser,
   logout,
