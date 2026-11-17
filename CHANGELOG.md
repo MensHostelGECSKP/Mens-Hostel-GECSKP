@@ -2,6 +2,17 @@
 
 All notable changes to the **MH App** project will be documented in this file.
 
+## [2.2.0] - 2026-11-17
+
+### Fixed
+* **Forgot Password on Production**: Resolved SMTP connection timeout on Render's free tier. The backend defaulted to port 465 (implicit TLS) which Render blocks outbound. Added `SMTP_PORT=587` and `SMTP_SECURE=false` to `render.yaml` to use STARTTLS, which Render allows. No code change to `authService.js` — the timeout guard and 503 error response already behave correctly.
+* **Missing `JWT_REFRESH_SECRET` in Render manifest**: Added `JWT_REFRESH_SECRET` to `render.yaml` env var list so the secret can be set via the Render dashboard alongside other secrets.
+
+### Chores
+* **SMTP documentation**: Updated `backend/.env.example` with explicit `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE` defaults and guidance for cloud deployments.
+
+---
+
 ## [2.1.0] - 2026-10-26
 
 ### Fixed
